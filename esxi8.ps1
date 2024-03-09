@@ -33,12 +33,9 @@ for ($i = 0; $i -lt $imageProfiles.Count; $i++) {
     echo "$($i + 1). $($imageProfiles[$i].Name)"
 }
 
-$selection = Read-Host "Select an ESXi image profile (1-$($imageProfiles.Count))"
-
-if ($selection -lt 1 -or $selection -gt $imageProfiles.Count) {
-    echo "Invalid selection. Exiting..."
-    exit
-}
+do {
+    $selection = Read-Host "Select an ESXi image profile (1-$($imageProfiles.Count))"
+} while (-not ($selection -match '^\d+$' -and $selection -ge 1 -and $selection -le $imageProfiles.Count))
 
 $imageProfile = $imageProfiles[$selection - 1].Name
 
