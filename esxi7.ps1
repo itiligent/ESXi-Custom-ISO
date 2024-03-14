@@ -30,16 +30,17 @@ echo ""
 Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
 $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Descending -Property @{Expression={$_.Name.Substring(0,10)}},@{Expression={$_.CreationTime.Date}},Name
 
+# Print a list of available profiles to choose from
 for ($i = 0; $i -lt $imageProfiles.Count; $i++) {
     echo "$($i + 1). $($imageProfiles[$i].Name)"
 }
 
+# Validate the selection
 do {
-    $selection = Read-Host "Select an ESXi image profile (1-$($imageProfiles.Count))"
-} while (-not ($selection -match '^\d+$' -and $selection -ge 1 -and $selection -le $imageProfiles.Count))
+    $selection = [int](Read-Host "Select an ESXi image profile (1-$($imageProfiles.Count))")
+} while (-not ($selection -ge 1 -and $selection -le $imageProfiles.Count))
 
 $imageProfile = $imageProfiles[$selection - 1].Name
-
 
 echo ""
 echo "Downloading $imageProfile"
