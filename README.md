@@ -4,6 +4,7 @@ Add latest versions of VMware Flings for network, nvme & usb nic drivers to ESXi
 
 ### For ESXi 8.x ISO: [esxi8.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi8.ps1) 
 - Builds ESXi 8 iso with VMWare Community NVME & USB NIC drivers + latest GhettoVCB backup.
+  - For earlier 800 & 80U1 builds, see script notes to select the correct USB NIC Fling
 
 ### For Esxi 7.x ISO: [esxi7.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi7.ps1)
 - Builds ESXi 7 iso with VMWare Community NVME, NIC & USB NIC driver + latest GhettoVCB backup.

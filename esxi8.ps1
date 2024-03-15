@@ -11,9 +11,17 @@
 # Set ESXi depot base version
 $baseESXiVer = "8"
 
-# Define NIC/USB/NVME driver links and file names
+# Define Fling source link 
 $git8Drv = "https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/8-drivers/"
+
+#Define NVME Fling filename
 $nvmeFling = "nvme-community-driver_1.0.1.0-3vmw.700.1.0.15843807-component-18902434.zip"
+
+#Define USB NIC Fling Filename
+	# For Esxi800 builds: ESXi800-VMKUSB-NIC-FLING-64098182-component-21668107.zip
+	# For ESXI80U1 builds: ESXi80U1-VMKUSB-NIC-FLING-64098092-component-21669994.zip
+	# For Esxi80U2 builds: ESXi80U2-VMKUSB-NIC-FLING-67561870-component-22416446.zip
+	# Before manually upgrading Esxi, Remove old fling, upgrade, then install new Fling
 $usbFling = "ESXi80U2-VMKUSB-NIC-FLING-67561870-component-22416446.zip"
 
 # Define Ghetto VCB repo for latest release download via Github API
