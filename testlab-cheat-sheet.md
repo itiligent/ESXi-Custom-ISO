@@ -1,11 +1,29 @@
 
 ### Update ESXi online
+    esxcli system maintenanceMode set -e true
     esxcli network firewall ruleset set -e true -r httpClient
-    esxcli software sources profile list -d https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml | grep -i ESXi-7.0
-    esxcli software profile update -d https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml -p PROFILE_NAME
+    esxcli software sources profile list -d https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml | grep -i ESXi-8
+    esxcli software profile update -d https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml -p PROFILE_NAME_FROM_LIST
     esxcli network firewall ruleset set -e false -r httpClient
+	esxcli system maintenanceMode set -e false
+	
+### Update ESXi offline
+    1. Use the powershell scripts in this repo to select and download the desired offline update bundle .zip file
+	2. SCP copy the bundle with SCP to the Esxi host
+	3. SSH into Esxi | cd to the dirctory the bundle uploaded to  	
+    4. esxcli system maintenanceMode set -e true
+	5. esxcli software sources profile list -d /full_path/ESXi-update-package.zip # checks to see available profiles in the bundle
+	6. esxcli software profile update -p ESXi_PROFILE_NAME -d /full_path/ESXi-update-package.zip # updates Esxi server
+
+### Some updates can break Flings
+You if upgrading from 800 & 80U1, you wll also need to upgrade the Fling.
+	1. esxcli software vib remove -n vmkusb-nic-fling | reboot
+	2. upgrade Esxi as per above | reboot
+	3. Download the appropriate Fling and SCP copy this to Esxi's /tmp dir 
+	4. SSH to Esxi | cd /tmp | unzip /tmp/flingname.zip
+	5. esxcli software vib install -v /tmp/vib20/vmkusb-nic-fling/filename.vib  (use full path) | reboot
  
-### Install ghettoVCB
+### Manually install ghettoVCB
 
     Download offline bundle from https://github.com/lamw/ghettoVCB/releases and copy to /tmp on ESXi
     
