@@ -1,5 +1,5 @@
 
-### Update ESXi online
+### Update ESXi online:
     esxcli system maintenanceMode set -e true
     esxcli network firewall ruleset set -e true -r httpClient
     esxcli software sources profile list -d https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml | grep -i ESXi-8
@@ -7,7 +7,7 @@
     esxcli network firewall ruleset set -e false -r httpClient
 	esxcli system maintenanceMode set -e false
 	
-### Update ESXi offline
+### Update ESXi offline:
     1. Use the powershell scripts in this repo to select and download the desired offline update bundle .zip file
 	2. SCP copy the bundle with SCP to the Esxi host
 	3. SSH into Esxi | cd to the dirctory the bundle uploaded to  	
@@ -15,15 +15,15 @@
 	5. esxcli software sources profile list -d /full_path/ESXi-update-package.zip # checks to see available profiles in the bundle
 	6. esxcli software profile update -p ESXi_PROFILE_NAME -d /full_path/ESXi-update-package.zip # updates Esxi server
 
-### Some updates can break Flings
-You if upgrading from 800 & 80U1, you wll also need to upgrade the Fling.
+### Some updates can break Flings:
+	If upgrading from 800 & 80U1, you wll also need to upgrade the Fling.
 	1. esxcli software vib remove -n vmkusb-nic-fling | reboot
 	2. upgrade Esxi as per above | reboot
 	3. Download the appropriate Fling and SCP copy this to Esxi's /tmp dir 
 	4. SSH to Esxi | cd /tmp | unzip /tmp/flingname.zip
 	5. esxcli software vib install -v /tmp/vib20/vmkusb-nic-fling/filename.vib  (use full path) | reboot
  
-### Manually install ghettoVCB
+### Manually install ghettoVCB:
 
     Download offline bundle from https://github.com/lamw/ghettoVCB/releases and copy to /tmp on ESXi
     
@@ -37,8 +37,32 @@ You if upgrading from 800 & 80U1, you wll also need to upgrade the Fling.
 
     Remove:
     esxcli software vib remove -n ghettoVCB
+	
+## Create persistent USB NIC name mappings
 
-### To add a USB backup datastore to ESXi
+Identify usb nics present:
+```
+esxcli network nic list |grep vusb |awk '{print $1, $8}'
+vusb0 ??:??:??:??:??:??
+vusb1 ??:??:??:??:??:??
+```
+
+Take thew MAC address output of the above to create the mapping. (Every time this is run it overwrites any previous mappings, so include all devices each time). 
+```
+esxcli system module parameters set -p "vusb0_mac=??:??:??:??:??:?? vusb1_mac=??:??:??:??:??:??" -m vmkusb_nic_fling
+```
+
+Verify mappings with
+```
+esxcli system module parameters list -m vmkusb_nic_fling
+```
+
+To make your current mappings persistent, use this one liner:
+```
+esxcli system module parameters set -p "$(esxcli network nic list |grep vusb |awk '{print $1 "_mac=" $8}' | awk 1 ORS=' ')" -m vmkusb_nic_fling
+```	
+
+### To add a USB backup datastore to ESXi:
 
     1. Stop the USB arbitrator from passing through USB devices temporarily:
        /etc/init.d/usbarbitrator stop
@@ -75,7 +99,16 @@ You if upgrading from 800 & 80U1, you wll also need to upgrade the Fling.
 
     10. Reboot. The new USB datastore should be available in the console and USB redirection still available for other USB devices.
 
-### Full offline backup via scp (FAST one time full copy)
+### Manually shrink a thin provisioned VMDK:
+
+First, zero out drive free space:
+- Linux VM: ```dd if=/dev/zero of=~/zeros.file bs=4096 status=progress && sync && rm -rf ~/zeros.file```
+- Windows VM: ```sdelete.exe -z c:```
+
+Next, shrink the zeroed free space vmdk using ESXi CLI:
+- ```vmkfstools -K disk_name.vmdk```
+
+### Full offline backup via scp (FAST one time full copy):
 
 For direct scp copy between datastores:
 ```
@@ -87,6 +120,25 @@ For scp copy over the network with sshkeys:
 scp -rvp -i /productLocker/dest-priv-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /vmfs/volumes/source_path/* user@x.x.x.x:/destination_path/
 ```
 
-### Rsync bakups 
+### Cloning an ESXi OS disk with a VMFS datastore present
+Problem: After cloning an ESxi disk containing a VMFS datastore, the datastore is not automatically mounted.
+
+```
+esxcfg-volume -l  			# lists all available unmounted VMFS datastores
+esxcfg-volume -m vmfs_label_name	# mounts the datastore till next reboot
+esxcfg-volume -M vmfs_label_name	# mounts the datastore persistent
+
+```
+
+### Backup ESXi config
+
+```
+vim-cmd hostsvc/firmware/sync_config && vim-cmd hostsvc/firmware/backup_config
+```
+Next, download the newly created config bundle from the http link in the above command output
+
+### Adding Rsync to ESXi for backups and much more: 
 See [here](https://github.com/itiligent/RSYNC-for-ESXi) for using rsync with ESXi
+
+
 
