@@ -6,12 +6,12 @@
  - Install PowerCLI (see below prerequisites)
  - Run the Powershell script and select from the menu your desired ESXi ISO patch level 
 
-### ESXi 8.x ISO: [esxi8.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi8.ps1) 
-- Builds ESXi 8 iso with VMWare Community NVME & USB NIC drivers + latest GhettoVCB backup.
+### ESXi 8 ISO: [esxi8.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi8.ps1) 
+- Builds ESXi 8.x iso with VMWare NVME & USB NIC Fling drivers + latest GhettoVCB backup. (NIC Fling was productized in 8.x)
 	- _For earlier 800 & 80U1 builds, see script notes to select the correct USB NIC Fling_
 
-### Esxi 7.x ISO: [esxi7.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi7.ps1)
-- Builds ESXi 7 iso with VMWare Community NVME, NIC & USB NIC driver + latest GhettoVCB backup.
+### Esxi 7 ISO: [esxi7.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi7.ps1)
+- Builds ESXi 7.x iso with VMWare NVME, NIC & USB NIC Fling drivers + latest GhettoVCB backup.
 
 ### ESXi 6.7 ISO: [esxi6.7.ps1](https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/esxi6.7.ps1) (Zimaboard compatible)
 - Builds ESXi 6.7 iso with VMware Community NVME & USB NIC drivers, Zimaboard Realtek 1GbE NIC driver + latest GhettoVCB backup.
@@ -59,7 +59,7 @@
    Set-PowerCLIConfiguration -PythonPath C:\Users\$env:USERNAME\AppData\Local\Programs\Python\Python37\python.exe
    ```
 
-6. Run the desired build script to start creating your custom ISO 🚀
+6. Run your desired version build script to start creating your custom ISO 🚀
 
 
 - This repo supports creation of VMware test labs using consumer (non HCL) hardware. Not suitable for production use.
