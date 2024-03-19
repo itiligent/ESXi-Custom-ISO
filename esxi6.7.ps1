@@ -31,7 +31,24 @@ echo "Retrieving latest ESXi $baseESXiVer bundle, this may take a while..."
 echo ""
 
 Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
-$imageProfile = (Get-EsxImageProfile -Name "ESXi-$baseESXiVer*-standard*" | Sort-Object -Descending -Property @{Expression={$_.Name.Substring(0,10)}},@{Expression={$_.CreationTime.Date}},Name | Select-Object -First 1).Name
+$imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Descending -Property @{Expression={$_.Name.Substring(0,10)}},@{Expression={$_.CreationTime.Date}},Name
+
+# Print a list of available profiles to choose from
+for ($i = 0; $i -lt $imageProfiles.Count; $i++) {
+    echo "$($i + 1). $($imageProfiles[$i].Name)"
+}
+
+# Validate the selection
+do {
+    $selection = [int](Read-Host "Select an ESXi image profile (1-$($imageProfiles.Count))")
+} while (-not ($selection -ge 1 -and $selection -le $imageProfiles.Count))
+
+$imageProfile = $imageProfiles[$selection - 1].Name
+
+echo ""
+echo "Downloading $imageProfile"
+echo ""
+
 if (!(Test-Path "$($imageProfile).zip")){Export-ESXImageProfile -ImageProfile $imageProfile -ExportToBundle -filepath "$($imageProfile).zip"}
 Get-EsxSoftwareDepot | Remove-EsxSoftwareDepot
 
