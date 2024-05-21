@@ -27,42 +27,50 @@
 
 ### 🛠️ PowerCLI & Python are prerequisites for building ESXi ISOs:
 
-  
+1. Ensure your local Powershell script policy will allow you to run scripts.
+   ```
+   Set-ExecutionPolicy Unrestricted (and select All)
+   To restore default policy: Set-ExecutionPolicy RemoteSigned
+   ````
 
-1. Install Python 3.7.9 [from here](https://www.python.org/downloads/release/python-379/) (Check "Add Python to PATH" a the start of the install and at the end select "Disable path length limit"). 
-  - _Scripts are tested and working with Python 3.7.9, for other versions YMMV and you must adapt the below instructions to suit._
+2a. For ESXi 6.7 ISOs, you must OFFLINE INSTALL install **PowerCLI 12.7.0**  this using the OFFLINE install method shown below [download it here](https://developer.vmware.com/web/tool/12.7.0/vmware-powercli/) and then simply run the esxi6.7.ps1 script. ESXi 6.x ISOs DO NOT REQUIRE PYTHON steps below. 
+   ```
+   # 1. If a PowerCLI version later than 12.7.0 is already installed, remove this first
+      (Get-Module VMware.PowerCLI -ListAvailable).RequiredModules | Uninstall-Module -Force
+   # 2. Extract all the contents of the PowerCLI 12.7.0 zip directly into the below path (should be a large bunch of VMware.xxx directories - do not create another sub directory)
+      %ProgramFiles%\WindowsPowerShell\Modules 
+   # 3. Unblock the new PowerCLI module files  
+      Get-ChildItem -Path $env:PROGRAMFILES\WindowsPowerShell\Modules\ -Recurse | Unblock-File 
+```
 
-2. For ESXi 7.x and 8.x ISOs, install the CURRENT version of VMware PowerCLI:
+2b. For ESXi 7.x and 8.x ISOs only, you must install the CURRENT version of VMware PowerCLI and Python:
    ```
    Install-Module VMware.PowerCLI
    ```
-   For ESXi 6.7 ISOs, you must install **PowerCLI 13.1.0** using the OFFLINE install method shown below [download it here](https://developer.vmware.com/web/tool/13.1.0/vmware-powercli/). 
-   ```
-   # 1. If a PowerCLI version later than 13.1.0 is already installed, remove this first
-      (Get-Module VMware.PowerCLI -ListAvailable).RequiredModules | Uninstall-Module -Force
-   # 2. Extract the contents of the downloaded PowerCLI 13.1.0 zip directly into the below path (do not create another sub directory)
-      %ProgramFiles%\WindowsPowerShell\Modules 
-   # 3. Unblock the new PowerCLI module files  
-      Get-ChildItem -Path $env:PROGRAMFILES\WindowsPowerShell\Modules\ -Recurse | Unblock-File
-   ```
-3. Upgrade Python PIP via Command prompt:
+ 
+3. To install Python 3.7.9 [download from here](https://www.python.org/downloads/release/python-379/) (Run the installer and check "Add Python to PATH" a the start of the install, and at the end of the install, select "Disable path length limit"). 
+  - _Scripts are tested and working with Python 3.7.9, for other versions YMMV and you must adapt the below instructions to suit._
+
+
+4. Next upgrade Python PIP via Command prompt (assumes 64 bit):
    ```
    C:\Users\%username%\AppData\Local\Programs\Python\Python37\python.exe -m pip install --upgrade pip
    ```
-4. Add extra Python dependencies via Command prompt:
+5. Add extra Python dependencies via Command prompt (assumes 64 bit):
    ```
    C:\Users\%username%\AppData\Local\Programs\Python\Python37\Scripts\pip3.7.exe install six psutil lxml pyopenssl
    ```
 
-5. Set the python.exe path via PowerShell:
+6. Optional, set the python.exe path via PowerShell (assumes 64 bit):
    ```
    Set-PowerCLIConfiguration -PythonPath C:\Users\$env:USERNAME\AppData\Local\Programs\Python\Python37\python.exe
    ```
 
-6. Run your desired version build script to start creating your custom ISO 🚀
+7. Run your desired version build script to start creating your custom ISO 🚀
 
 
 - This repo supports creation of VMware test labs using consumer (non HCL) hardware. Not suitable for production use.
 - After Broadcom's acquisition of VMWare in October 2023, the VMware Flings community download site was taken offline and its future is uncertain. A copy of the archived flings.vmware.com site can be found at https://archive.org/details/flings.vmware.com.
 - The ESXi 6.7 script's additional Zimaboard RTL8168 NIC drivers were sourced from [here](https://vibsdepot.v-front.de). Optional RTL 8125 2.5GBe vibs for use with ESXi 6.7 were sourced from [here](https://github.com/mcr-ksh/r8125-esxi).
+
 
