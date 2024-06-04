@@ -22,9 +22,21 @@ $nvmeFling = "nvme-community-driver_1.0.1.0-1vmw.670.0.0.8169922-offline_bundle-
 
 # Define Ghetto VCB repo for latest release download via Github API
 $releaseUrl = "https://api.github.com/repos/lamw/ghettoVCB/releases/latest"
-$ghettoVCB = "vghetto-ghettoVCB-offline-bundle.zip"
-$response = Invoke-RestMethod -Uri $releaseUrl
-$ghettoDownloadUrl = $response.assets[0].browser_download_url
+$ghettoVCB = "vghetto-ghettoVCB-offline-bundle-7x.zip"
+
+# Set up user agent to avoid GitHub API rate limiting issues
+$headers = @{
+    "User-Agent" = "PowerShell"
+} | Out-Null
+
+# Fetch the latest release information from GitHub API
+$response = Invoke-RestMethod -Uri $releaseUrl -Headers $headers
+
+# Extract the download URL for the specific asset
+$ghettoDownloadUrl = $response.assets | Where-Object { $_.name -eq $ghettoVCB } | Select-Object -ExpandProperty browser_download_url
+
+# Download the file
+Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $ghettoVCB
 
 echo ""
 echo "Retrieving latest ESXi $baseESXiVer bundle, this may take a while..."
