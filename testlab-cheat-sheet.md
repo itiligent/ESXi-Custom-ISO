@@ -102,8 +102,66 @@ esxcli system module parameters set -p "$(esxcli network nic list |grep vusb |aw
 ### Manually shrink a thin provisioned VMDK:
 
 First, zero out drive free space:
-- Linux VM: ```dd if=/dev/zero of=~/zeros.file bs=4096 status=progress && sync && rm -rf ~/zeros.file```
 - Windows VM: ```sdelete.exe -z c:```
+- Linux VM: 
+```
+#!/bin/bash
+
+# Define the filesystem mount point and zeroed file location here
+MOUNT_POINT="/data"
+ZERO_FILE_LOCATION="${MOUNT_POINT}/zerofile"
+
+# Function to calculate the available free space in bytes for the specified mount point
+get_free_space() {
+    local mount_point=$1
+    # Use 'df' to get the free space available on the specified filesystem
+    free_space=$(df "$mount_point" | tail -1 | awk '{print $4}')
+    echo $((free_space * 1024))  # Convert from KB to bytes
+}
+
+# Function to calculate the maximum file size to create
+calculate_max_file_size() {
+    local free_space=$1
+    # Define a safety margin (e.g., 1 GB) to prevent running out of space
+    local safety_margin=$((1 * 1024 * 1024 * 1024))  # 1 GB in bytes
+    # Calculate the maximum file size by subtracting the safety margin
+    local max_file_size=$((free_space - safety_margin))
+    # Ensure that the maximum file size is not negative
+    if [ $max_file_size -lt 0 ]; then
+        max_file_size=0
+    fi
+    echo $max_file_size
+}
+
+# Get the available free space for the specified mount point
+free_space=$(get_free_space "$MOUNT_POINT")
+
+# Calculate the maximum file size
+max_file_size=$(calculate_max_file_size $free_space)
+
+# Convert max file size to a more readable format
+if [ $max_file_size -gt 0 ]; then
+    max_file_size_mb=$((max_file_size / 1024 / 1024))
+    echo "Maximum file size for zeroing out: ${max_file_size_mb} MB"
+
+    # Create a large file filled with zeros to ensure all free space is filled
+    echo "Creating zeroed file of size ${max_file_size_mb} MB at ${ZERO_FILE_LOCATION}..."
+    dd if=/dev/zero of="${ZERO_FILE_LOCATION}" bs=1M status=progress seek=$max_file_size_mb
+
+    # Remove the zeroed file to make the space available for shrinking
+    echo "Removing the zeroed file..."
+    rm -f "${ZERO_FILE_LOCATION}"
+
+    # Sync filesystem to ensure all data is written to disk
+    echo "Syncing filesystem..."
+    sync
+
+    echo "Zeroing and sync complete. Now you can proceed to compact the VM disk from VMware tools."
+else
+    echo "Not enough free space to create the zeroed file. Please free up some space before proceeding."
+fi
+
+```
 
 Next, shrink the zeroed free space vmdk using ESXi CLI:
 - ```vmkfstools -K disk_name.vmdk```
