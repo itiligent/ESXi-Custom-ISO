@@ -56,12 +56,12 @@ Add-EsxSoftwareDepot $2024034001Update
 
 # Grab the list of publically available image profiles from VMware 
 Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
-$imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Descending -Property @{Expression={$_.Name.Substring(0,10)}},@{Expression={$_.CreationTime.Date}},Name
-1
+$imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } |  Sort-Object -Property CreationTime -Descending
+
 echo ""
 # Print a list of available profiles to choose from
 for ($i = 0; $i -lt $imageProfiles.Count; $i++) {
-    echo "$($i + 1). $($imageProfiles[$i].Name)"
+    echo "$($i + 1). $($imageProfiles[$i].Name) - Created on: $($imageProfiles[$i].CreationTime)"
 }
 
 # Validate the selection
