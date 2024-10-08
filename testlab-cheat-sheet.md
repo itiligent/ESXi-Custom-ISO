@@ -93,10 +93,6 @@ esxcli system module parameters set -p "$(esxcli network nic list |grep vusb |aw
     9. Prevent USB passthrough for this specific USB device using the above list output, formatted as  #:#:#:#
        esxcli hardware usb passthrough device disable -d 2:2:bc2:231a
 
-       Bus  Dev  VendorId  ProductId  Enabled  Can Connect to VM          Name
-       ---  ---  --------  ---------  -------  -------------------------  ----
-       2    2    bc2       231a       false    no (passthrough disabled)  Seagate RSS LLC Expansion Portable
-
     10. Reboot. The new USB datastore should be available in the console and USB redirection still available for other USB devices.
 
 ### Manually shrink a thin provisioned VMDK:
@@ -168,14 +164,19 @@ Next, shrink the zeroed free space vmdk using ESXi CLI:
 
 ### Full offline backup via scp (FAST one time full copy):
 
-For direct scp copy between datastores:
+Direct scp copy between datastores:
 ```
-scp -rvp /vmfs/volumes/source_path/* /vmfs/volumes/USB_datastore/full_backup
+scp -rp /vmfs/volumes/source_path/* /vmfs/volumes/USB_datastore/full_backup
 ```
 
-For scp copy over the network with sshkeys (set priv key file perms with chmod 400): 
+SCP copy over network (ssh password)
 ```
-scp -rvp -i /productLocker/dest-priv-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /vmfs/volumes/source_path/* user@x.x.x.x:/destination_path/
+scp -rp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /vmfs/volumes/source_path/* user@x.x.x.x:/destination_path/
+```
+
+SCP copy over the network with sshkeys (set priv key file perms with chmod 400): 
+```
+scp -rp -i /productLocker/dest-priv-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /vmfs/volumes/source_path/* user@x.x.x.x:/destination_path/
 ```
 
 ### Cloning an ESXi OS disk with a VMFS datastore present
