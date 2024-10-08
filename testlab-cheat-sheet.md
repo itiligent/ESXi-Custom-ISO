@@ -168,12 +168,17 @@ Next, shrink the zeroed free space vmdk using ESXi CLI:
 
 ### Full offline backup via scp (FAST one time full copy):
 
-For direct scp copy between datastores:
+Direct scp copy between datastores:
 ```
 scp -rvp /vmfs/volumes/source_path/* /vmfs/volumes/USB_datastore/full_backup
 ```
 
-For scp copy over the network with sshkeys (set priv key file perms with chmod 400): 
+SCP copy over network (ssh password)
+```
+scp -rvp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /vmfs/volumes/source_path/* user@x.x.x.x:/destination_path/
+```
+
+SCP copy over the network with sshkeys (set priv key file perms with chmod 400): 
 ```
 scp -rvp -i /productLocker/dest-priv-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /vmfs/volumes/source_path/* user@x.x.x.x:/destination_path/
 ```
