@@ -93,10 +93,6 @@ esxcli system module parameters set -p "$(esxcli network nic list |grep vusb |aw
     9. Prevent USB passthrough for this specific USB device using the above list output, formatted as  #:#:#:#
        esxcli hardware usb passthrough device disable -d 2:2:bc2:231a
 
-       Bus  Dev  VendorId  ProductId  Enabled  Can Connect to VM          Name
-       ---  ---  --------  ---------  -------  -------------------------  ----
-       2    2    bc2       231a       false    no (passthrough disabled)  Seagate RSS LLC Expansion Portable
-
     10. Reboot. The new USB datastore should be available in the console and USB redirection still available for other USB devices.
 
 ### Manually shrink a thin provisioned VMDK:
