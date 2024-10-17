@@ -17,28 +17,29 @@
 ### 🛠️ Instructions for building ESXi ISOs:
 
 ```
-1. Ensure your local Powershell script policy will allow you to run PS scripts.
+1. Enable Powershell script policy:
 	Set-ExecutionPolicy Unrestricted -Scope CurrentUser # and select All
-		To restore default policy: Set-ExecutionPolicy RemoteSigned -Scope CurrentUser 
+		To restore default: Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
-2. (For ESXi 7 & 8 ISOs, GO TO STEP 3)
-	For 6.7 ISOs you must OFFLINE INSTALL PowerCLI 12.7.0 using the method shown below.
+For ESXi 7 & 8 ISOs GO TO STEP 3, For ESXi 6.x GO TO STEP 2
+
+2. ESXi 6.7 ISOs require older Powercli.  You must OFFLINE INSTALL as follows:
 		Download it here: https://developer.vmware.com/web/tool/12.7.0/vmware-powercli
 		a. Start with a FRESH Windows system (Powercli's uninstaller does not appear to remove everything)
 		b. Extract contents of PowerCLI zip to %ProgramFiles%\WindowsPowerShell\Modules 
 		c. Run: Get-ChildItem -Path $env:PROGRAMFILES\WindowsPowerShell\Modules\ -Recurse | Unblock-File 
 		d. Run the esxi6.7.ps1 script so build the 6.7 ISO.
  
-3. For ESXi 7.x and 8.x ISOs: install python 3.7.1 to 3.12. More current versions may break PowerCLI
-	a. Run the Python installer and check "Add Python to PATH" a the start of the install, t
-	b. At the end of the Python install, select "Disable path length limit". 
-	c. Run: Install-Module VMware.PowerCLI -Scope CurrentUser # Select Y to install from untrusted repo
+3. For ESXi 7.x and 8.x ISOs: 
+	a. Run: Install-Module VMware.PowerCLI -Scope CurrentUser # Select Y to install from untrusted repo
+	b. Install Python (tested with 3.11.9) and check "Add Python to PATH" a the start of install
+	c. At end of Python install, select "Disable path length limit"
 
 4. Upgrade Python PIP:
-	C:\Users\%username%\AppData\Local\Programs\Python\Python37\python.exe -m pip install --upgrade pip
+	C:\Users\%username%\AppData\Local\Programs\Python\Python311\python.exe -m pip install --upgrade pip
 
 5. Add Python dependencies for PowerCLI
-	C:\Users\%username%\AppData\Local\Programs\Python\Python37\Scripts\pip3.7.exe install six psutil lxml pyopenssl
+	C:\Users\%username%\AppData\Local\Programs\Python\Python311\Scripts\pip3.11.exe install six psutil lxml pyopenssl
 
 6. Adjust the PowerCLI python.exe path and Customer Improvement Program settings
 	Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false
