@@ -29,7 +29,7 @@
 		c. Run: Get-ChildItem -Path $env:PROGRAMFILES\WindowsPowerShell\Modules\ -Recurse | Unblock-File 
 		d. Run the esxi6.7.ps1 script so build the 6.7 ISO.
  
-3. For ESXi 7.x and 8.x ISOs: install the CURRENT version of VMware PowerCLI and Python
+3. For ESXi 7.x and 8.x ISOs: install python 3.7.1 to 3.12. More current versions may break PowerCLI
 	a. Run the Python installer and check "Add Python to PATH" a the start of the install, t
 	b. At the end of the Python install, select "Disable path length limit". 
 	c. Run: Install-Module VMware.PowerCLI -Scope CurrentUser # Select Y to install from untrusted repo
