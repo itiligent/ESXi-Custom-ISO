@@ -4,11 +4,8 @@
 # February 2024
 ##############################################################################################
 
-# Note: After Broadcom's acquisition of VMWare in October 2023, the VMware Community Drivers download site has been 
-# taken down and its future is unclear. This script now downloads saved copies of the last available flings from this repo directly.
-# Realtek drivers are now also copied from this repo in case they disappear in future and can be verified
-# at https://vibsdepot.v-front.de & https://github.com/mcr-ksh/r8125-esxi 
-# A final archive copy of the entire flings.vmware.com site can be found https://archive.org/details/flings.vmware.com
+# Realtek drivers used in this repo can be verified at 
+# https://vibsdepot.v-front.de & https://github.com/mcr-ksh/r8125-esxi 
 
 # Set ESXi depot base version
 $baseESXiVer = "6.7"

@@ -4,10 +4,6 @@
 # February 2024
 ##############################################################################################
 
-# Note: After Broadcom's acquisition of VMWare in October 2023, the Community Drivers download site has been 
-# taken down and its future is unclear. The script below now downloads the last available flings from this repo directly.
-# A copy of the entire flings.vmware.com site can be found https://archive.org/details/flings.vmware.com.
-
 # Set ESXi depot base version
 $baseESXiVer = "7"
 
