@@ -118,7 +118,6 @@ Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-igb" -For
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "ghettoVCB" -Force
 #Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-r8125" -Force
 
-
 echo ""
 echo "Exporting the custom profile to an ISO..."
 echo ""
