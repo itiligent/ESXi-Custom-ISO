@@ -85,7 +85,7 @@ if (!(Test-Path $usbFling)){Invoke-WebRequest -Method "GET" $flingUrl$($usbFling
 if (!(Test-Path $realtek8168)){Invoke-WebRequest -Method "GET" $flingUrl$($realtek8168) -OutFile $($realtek8168)}
 if (!(Test-Path $intelnic)){Invoke-WebRequest -Method "GET" $flingUrl$($intelnic) -OutFile $($intelnic)}
 if (!(Test-Path $ghettoVCB)){Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $($ghettoVCB)}
-if (!(Test-Path $realtek8125)){Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $($realtek8125)}
+if (!(Test-Path $realtek8125)){Invoke-WebRequest -Method "GET" $flingUrl$($realtek8125) -OutFile $($realtek8125)}
 
 echo ""
 echo "Adding extra packages to the local depot"
@@ -115,7 +115,6 @@ Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "nvme-communit
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "vmkusb-nic-fling" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net55-r8168" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-igb" -Force
-Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "ghettoVCB" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "ghettoVCB" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-r8125" -Force
 
