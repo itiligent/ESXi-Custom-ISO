@@ -23,7 +23,7 @@ $2024034001Update = "ESXi670-202403001.zip"
 $realtek8168 = "net55-r8168-8.045a-napi-offline_bundle.zip"
 $intelnic = "net-igb-5.3.2-99-offline_bundle.zip"
 $nvmeFling = "nvme-community-driver_1.0.1.0-1vmw.670.0.0.8169922-offline_bundle-17658145.zip"
-$realtek8125 = "r8125-bundle.zip"
+#$realtek8125 = "r8125-bundle.zip"
 
 # Define Ghetto VCB repo for latest release download via Github API
 $ghettoUrl = "https://api.github.com/repos/lamw/ghettoVCB/releases/latest"
@@ -85,7 +85,7 @@ if (!(Test-Path $usbFling)){Invoke-WebRequest -Method "GET" $flingUrl$($usbFling
 if (!(Test-Path $realtek8168)){Invoke-WebRequest -Method "GET" $flingUrl$($realtek8168) -OutFile $($realtek8168)}
 if (!(Test-Path $intelnic)){Invoke-WebRequest -Method "GET" $flingUrl$($intelnic) -OutFile $($intelnic)}
 if (!(Test-Path $ghettoVCB)){Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $($ghettoVCB)}
-if (!(Test-Path $realtek8125)){Invoke-WebRequest -Method "GET" $flingUrl$($realtek8125) -OutFile $($realtek8125)}
+#if (!(Test-Path $realtek8125)){Invoke-WebRequest -Method "GET" $flingUrl$($realtek8125) -OutFile $($realtek8125)}
 
 echo ""
 echo "Adding extra packages to the local depot"
@@ -97,7 +97,7 @@ Add-EsxSoftwareDepot $usbFling
 Add-EsxSoftwareDepot $realtek8168
 Add-EsxSoftwareDepot $intelnic
 Add-EsxSoftwareDepot $ghettoVCB
-Add-EsxSoftwareDepot $realtek8125
+#Add-EsxSoftwareDepot $realtek8125
 
 echo ""
 echo "Creating a custom profile" 
@@ -116,7 +116,7 @@ Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "vmkusb-nic-fl
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net55-r8168" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-igb" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "ghettoVCB" -Force
-Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-r8125" -Force
+#Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-r8125" -Force
 
 
 echo ""
