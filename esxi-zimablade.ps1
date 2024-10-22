@@ -7,7 +7,7 @@
 # Realtek drivers used in this repo can be verified at 
 # https://vibsdepot.v-front.de & https://github.com/mcr-ksh/r8125-esxi 
 
-# Set ESXi depot base version
+# Set ESXi depot base version. Zimablade Reatek NIC drivers will not work above Esxi 6.5 
 $baseESXiVer = "6.5"
 
 # Dowload Flings from Broadcom here: 
