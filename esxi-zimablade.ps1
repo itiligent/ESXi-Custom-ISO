@@ -1,13 +1,13 @@
 ##############################################################################################
-# Build custom ESXi 6.5 ISOs for Zimablade
+# Build custom ESXi 6.7 ISOs for non HCL hardware and Zimaboard
 # David Harrop
-# October 2024
+# February 2024
 ##############################################################################################
 
 # Realtek drivers used in this repo can be verified at 
 # https://vibsdepot.v-front.de & https://github.com/mcr-ksh/r8125-esxi 
 
-# Set ESXi depot base version. Zimablade Reatek NIC drivers will not work above Esxi 6.5 
+# Set ESXi depot base version
 $baseESXiVer = "6.5"
 
 # Dowload Flings from Broadcom here: 
@@ -18,7 +18,10 @@ $baseESXiVer = "6.5"
 # Define Fling archive source link
 $flingUrl = "https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/6.7-updates/"
 $usbFling = "ESXi670-VMKUSB-NIC-FLING-39203948-offline_bundle-16780994.zip"
-$intelnic = "net-igb-5.3.2-99-offline_bundle.zip"
+$2024034001Url = "https://api.onedrive.com/v1.0/shares/s!Asccp3ag4RnQj7xd8Pes4eJTZhQVfg/root/content" # Provide your own update file and adjust link here
+$extendedUpdate = "ESXi650-202403001.zip"
+#$realtek8168 = "net55-r8168-8.045a-napi-offline_bundle.zip"
+#$intelnic = "net-igb-5.3.2-99-offline_bundle.zip"
 $nvmeFling = "nvme-community-driver_1.0.1.0-1vmw.670.0.0.8169922-offline_bundle-17658145.zip"
 $realtek8169 = "net51-r8169-6.011.00-2vft.510.0.0.799733-offline_bundle.zip"
 
@@ -43,6 +46,11 @@ Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $ghettoVCB
 echo ""
 echo "Retrieving ESXi $baseESXiVer installation bundles to choose from, this may take a while..."
 echo ""
+
+# TESTING: Add to the list of profiles by separately downloading the restricted 202403400 update See: https://docs.vmware.com/en/VMware-vSphere/6.7/rn/esxi670-202403001.html
+# (SHA256 sums match VMmware docs)
+if (!(Test-Path $extendedUpdate)){Invoke-WebRequest -Uri $2024034001Url -OutFile $($extendedUpdate)}
+Add-EsxSoftwareDepot $extendedUpdate
 
 # Grab the list of publically available image profiles from VMware 
 Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
@@ -74,7 +82,8 @@ echo ""
 
 if (!(Test-Path $nvmeFling)){Invoke-WebRequest -Method "GET" $flingUrl$($nvmeFling) -OutFile $($nvmeFling)}
 if (!(Test-Path $usbFling)){Invoke-WebRequest -Method "GET" $flingUrl$($usbFling) -OutFile $($usbFling)}
-if (!(Test-Path $intelnic)){Invoke-WebRequest -Method "GET" $flingUrl$($intelnic) -OutFile $($intelnic)}
+#if (!(Test-Path $realtek8168)){Invoke-WebRequest -Method "GET" $flingUrl$($realtek8168) -OutFile $($realtek8168)}
+#if (!(Test-Path $intelnic)){Invoke-WebRequest -Method "GET" $flingUrl$($intelnic) -OutFile $($intelnic)}
 if (!(Test-Path $ghettoVCB)){Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $($ghettoVCB)}
 if (!(Test-Path $realtek8169)){Invoke-WebRequest -Method "GET" $flingUrl$($realtek8169) -OutFile $($realtek8169)}
 
@@ -85,7 +94,8 @@ echo ""
 Add-EsxSoftwareDepot "$($imageProfile).zip"
 Add-EsxSoftwareDepot $nvmeFling
 Add-EsxSoftwareDepot $usbFling
-Add-EsxSoftwareDepot $intelnic
+#Add-EsxSoftwareDepot $realtek8168
+#Add-EsxSoftwareDepot $intelnic
 Add-EsxSoftwareDepot $ghettoVCB
 Add-EsxSoftwareDepot $realtek8169
 
@@ -103,7 +113,8 @@ echo ""
 
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "nvme-community" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "vmkusb-nic-fling" -Force
-Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-igb" -Force
+#Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net55-r8168" -Force
+#Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-igb" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "ghettoVCB" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net51-r8169" -Force
 
