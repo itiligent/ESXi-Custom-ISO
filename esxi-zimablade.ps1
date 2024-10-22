@@ -44,7 +44,7 @@ $ghettoDownloadUrl = $response.assets | Where-Object { $_.name -eq $ghettoVCB } 
 Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $ghettoVCB
 
 echo ""
-echo "Retrieving ESXi $baseESXiVer installation bundles to choose from, this may take a while..."
+echo "Retrieving ESXi $baseESXiVer installation bundle (Zimablade NIC driver needs Esxi 6.5)..."
 echo ""
 
 # TESTING: Add to the list of profiles by separately downloading the restricted 202403400 update See: https://docs.vmware.com/en/VMware-vSphere/6.7/rn/esxi670-202403001.html
