@@ -18,7 +18,7 @@ $baseESXiVer = "6.5"
 # Define Fling archive source link
 $flingUrl = "https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/6.7-updates/"
 $usbFling = "ESXi670-VMKUSB-NIC-FLING-39203948-offline_bundle-16780994.zip"
-$2024034001Url = "https://api.onedrive.com/v1.0/shares/s!Asccp3ag4RnQj7xd8Pes4eJTZhQVfg/root/content" # Provide your own update file and adjust link here
+$extendedUpdateUrl = "https://api.onedrive.com/v1.0/shares/s!Asccp3ag4RnQj7xd8Pes4eJTZhQVfg/root/content" # Provide your own update file and adjust link here
 $extendedUpdate = "ESXi650-202403001.zip"
 #$realtek8168 = "net55-r8168-8.045a-napi-offline_bundle.zip"
 #$intelnic = "net-igb-5.3.2-99-offline_bundle.zip"
@@ -49,7 +49,7 @@ echo ""
 
 # TESTING: Add to the list of profiles by separately downloading the restricted 202403400 update See: https://docs.vmware.com/en/VMware-vSphere/6.7/rn/esxi670-202403001.html
 # (SHA256 sums match VMmware docs)
-if (!(Test-Path $extendedUpdate)){Invoke-WebRequest -Uri $2024034001Url -OutFile $($extendedUpdate)}
+if (!(Test-Path $extendedUpdate)){Invoke-WebRequest -Uri $extendedUpdateUrl -OutFile $($extendedUpdate)}
 Add-EsxSoftwareDepot $extendedUpdate
 
 # Grab the list of publically available image profiles from VMware 
