@@ -1,7 +1,7 @@
 ##############################################################################################
-# Build custom ESXi 6.7 ISOs for non HCL hardware and Zimaboard
+# Build custom ESXi 6.5 ISOs for Zimablade
 # David Harrop
-# February 2024
+# October 2024
 ##############################################################################################
 
 # Realtek drivers used in this repo can be verified at 
