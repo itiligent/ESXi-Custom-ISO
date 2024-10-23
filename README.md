@@ -49,13 +49,13 @@ For ESXi 7 & 8 ISOs GO TO STEP 3, For ESXi 6.x GO TO STEP 2
 ```
 
 - Zimaboard/Zimablade users note:
-  - Zimaboard's optional RTL 8125 2.5GbE NIC driver for ESXi 6.7 can be found [here](https://github.com/itiligent/ESXi-Custom-ISO/raw/main/6.7-updates/net-r8125-9.011.00-10.vib)
+  - Zimaboard's optional RTL 8125 2.5GbE NIC driver for ESXi 6.7 can be found [here](https://github.com/itiligent/ESXi-Custom-ISO/raw/main/6-updates/net-r8125-9.011.00-10.vib)
     - To manually install 2.5GbE driver:`esxcli software vib install -v net-r8125-9.011.00-10.vib`
     - To manually remove 2.5GbE driver: `esxcli software vib remove -n net-r8125`
     - Full duplex on the ESXi NIC & physical switch may give better performance, your milage may vary
   
 <p align="center">
-  <img src="https://github.com/itiligent/ESXi-Custom-ISO/blob/main/6.7-updates/esxi-zimaboard-screenshot.PNG" width="750" alt="Screenshot">
+  <img src="https://github.com/itiligent/ESXi-Custom-ISO/blob/main/6-updates/esxi-zimaboard-screenshot.PNG" width="750" alt="Screenshot">
 </p>
 
 - VMware Community Flings have been moved into the Broadcom universe at https://community.broadcom.com/flings/home
