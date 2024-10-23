@@ -15,15 +15,14 @@ $baseESXiVer = "6.7"
 # or 
 # https://higherlogicdownload.s3.amazonaws.com/BROADCOM/092f2b51-ca4c-4dca-abc0-070f25ade760/UploadedImages/Flings_Content/filename.zip"
 
-# Define Fling archive source link
+# Define archive source links and files
 $flingUrl = "https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/6.7-updates/"
+$manualUpdateUrl = "https://api.onedrive.com/v1.0/shares/s!Asccp3ag4RnQj7xd8Pes4eJTZhQVfg/root/content" # Provide your own update file and adjust link here
+$manualUpdate = "ESXi670-202403001.zip"
 $usbFling = "ESXi670-VMKUSB-NIC-FLING-39203948-offline_bundle-16780994.zip"
-$2024034001Url = "https://api.onedrive.com/v1.0/shares/s!Asccp3ag4RnQj7xd8Pes4eJTZhQVfg/root/content" # Provide your own update file and adjust link here
-$2024034001Update = "ESXi670-202403001.zip"
 $realtek8168 = "net55-r8168-8.045a-napi-offline_bundle.zip"
 $intelnic = "net-igb-5.3.2-99-offline_bundle.zip"
 $nvmeFling = "nvme-community-driver_1.0.1.0-1vmw.670.0.0.8169922-offline_bundle-17658145.zip"
-#$realtek8125 = "r8125-bundle.zip"
 
 # Define Ghetto VCB repo for latest release download via Github API
 $ghettoUrl = "https://api.github.com/repos/lamw/ghettoVCB/releases/latest"
@@ -47,10 +46,9 @@ echo ""
 echo "Retrieving ESXi $baseESXiVer installation bundles to choose from, this may take a while..."
 echo ""
 
-# TESTING: Add to the list of profiles by separately downloading the restricted 202403400 update See: https://docs.vmware.com/en/VMware-vSphere/6.7/rn/esxi670-202403001.html
-# (SHA256 sums match VMmware docs)
-if (!(Test-Path $2024034001Update)){Invoke-WebRequest -Uri $2024034001Url -OutFile $($2024034001Update)}
-Add-EsxSoftwareDepot $2024034001Update
+# Add to the list of profiles any restricted updates
+if (!(Test-Path $manualUpdate)){Invoke-WebRequest -Uri $manualUpdateUrl -OutFile $($manualUpdate)}
+Add-EsxSoftwareDepot $manualUpdate
 
 # Grab the list of publically available image profiles from VMware 
 Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
@@ -85,7 +83,6 @@ if (!(Test-Path $usbFling)){Invoke-WebRequest -Method "GET" $flingUrl$($usbFling
 if (!(Test-Path $realtek8168)){Invoke-WebRequest -Method "GET" $flingUrl$($realtek8168) -OutFile $($realtek8168)}
 if (!(Test-Path $intelnic)){Invoke-WebRequest -Method "GET" $flingUrl$($intelnic) -OutFile $($intelnic)}
 if (!(Test-Path $ghettoVCB)){Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $($ghettoVCB)}
-#if (!(Test-Path $realtek8125)){Invoke-WebRequest -Method "GET" $flingUrl$($realtek8125) -OutFile $($realtek8125)}
 
 echo ""
 echo "Adding extra packages to the local depot"
@@ -97,7 +94,6 @@ Add-EsxSoftwareDepot $usbFling
 Add-EsxSoftwareDepot $realtek8168
 Add-EsxSoftwareDepot $intelnic
 Add-EsxSoftwareDepot $ghettoVCB
-#Add-EsxSoftwareDepot $realtek8125
 
 echo ""
 echo "Creating a custom profile" 
@@ -116,7 +112,6 @@ Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "vmkusb-nic-fl
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net55-r8168" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-igb" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "ghettoVCB" -Force
-#Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "net-r8125" -Force
 
 echo ""
 echo "Exporting the custom profile to an ISO..."
