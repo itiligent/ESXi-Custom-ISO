@@ -17,8 +17,7 @@ $baseESXiVer = "6.5"
 
 # Define archive source links and files
 $flingUrl = "https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/6-updates/"
-$manualUpdateUrl = "https://api.onedrive.com/v1.0/shares/s!Asccp3ag4RnQj-c0WAirME-Ec-D8ig/root/content
-" # Provide your own update file and adjust link here
+$manualUpdateUrl = "https://api.onedrive.com/v1.0/shares/s!Asccp3ag4RnQj-c0WAirME-Ec-D8ig/root/content" # Provide your own update file and adjust link here
 $manualUpdate = "ESXi650-202210001.zip"
 $realtek8169 = "net51-r8169-6.011.00-2vft.510.0.0.799733-offline_bundle.zip"
 $intelnic = "net-igb-5.3.2-99-offline_bundle.zip"
