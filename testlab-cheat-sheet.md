@@ -201,3 +201,18 @@ See [here](https://github.com/itiligent/RSYNC-for-ESXi) for using rsync with ESX
 
 
 
+### UESXi 8 setup tweaks 
+
+Change password quality control:  retry=5 min=1,1,1,1,1
+config autostart
+config ntpd: 0.au.pool.ntp.org, 1.au.pool.ntp.org, 2.au.pool.ntp.org, 3.au.pool.ntp.org
+config portgroups
+add eddsa ssh keys 
+/etc/ssh/sshd_config
+fipsmode no
+kbdinteractiveauthentication no
+challengeresponseauthentication no
+
+create /etc/ssh/keys-root/authorized_keys
+		add your key
+		/etc/init.d/SSH restart
