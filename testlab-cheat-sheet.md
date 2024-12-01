@@ -207,6 +207,7 @@ ease password quality control:  retry=5 min=1,1,1,1,1
 config ntpd: 0.au.pool.ntp.org, 1.au.pool.ntp.org, 2.au.pool.ntp.org, 3.au.pool.ntp.org
 config portgroups
 config autostart vms
+power policy
 
 add eddsa ssh keys:
 	/etc/ssh/sshd_config
