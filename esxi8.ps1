@@ -15,7 +15,7 @@ $baseESXiVer = "8"
 # Define Fling archive source link
 $flingUrl = "https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/8-updates/" # Fling archive in case they disappear again
 
-# Define NVME Fling filename
+# Define NVME Fling filename - removed as this is deprecated now
 $nvmeFling = "nvme-community-driver_1.0.1.0-3vmw.700.1.0.15843807-component-18902434.zip"
 
 # Define USB NIC Fling Filename
@@ -25,23 +25,24 @@ $nvmeFling = "nvme-community-driver_1.0.1.0-3vmw.700.1.0.15843807-component-1890
 	# Before manually upgrading Esxi, Remove old fling, upgrade, then install new Fling
 $usbFling = "ESXi803-VMKUSB-NIC-FLING-76444229-component-24179899.zip"
 
-# Define Ghetto VCB repo for latest release download via Github API
-$ghettoUrl = "https://api.github.com/repos/lamw/ghettoVCB/releases/latest"
-$ghettoVCB = "vghetto-ghettoVCB-offline-bundle-8x.zip"
+# Removed ghetoVCB support until vibs are compatobule with esxi 8. Manually add ghetto scripts to ESXi in meantime.
+	# Define Ghetto VCB repo for latest release download via Github API
+	#$ghettoUrl = "https://api.github.com/repos/lamw/ghettoVCB/releases/latest"
+	#$ghettoVCB = "vghetto-ghettoVCB-offline-bundle-8x.zip"
 
-# Set up user agent to avoid GitHub API rate limiting issues
-$headers = @{
-    "User-Agent" = "PowerShell"
-} | Out-Null
+	# Set up user agent to avoid GitHub API rate limiting issues
+	#$headers = @{
+	#    "User-Agent" = "PowerShell"
+	#} | Out-Null
 
-# Fetch the latest release information from GitHub API
-$response = Invoke-RestMethod -Uri $ghettoUrl -Headers $headers
+	# Fetch the latest release information from Ghetto VCB GitHub API
+	#$response = Invoke-RestMethod -Uri $ghettoUrl -Headers $headers
 
-# Extract the download URL for the specific asset
-$ghettoDownloadUrl = $response.assets | Where-Object { $_.name -eq $ghettoVCB } | Select-Object -ExpandProperty browser_download_url
+	# Extract Ghetto VCB download URL for the specific asset
+	#$ghettoDownloadUrl = $response.assets | Where-Object { $_.name -eq $ghettoVCB } | Select-Object -ExpandProperty browser_download_url
 
-# Download the file
-Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $ghettoVCB
+	# Ghetto download the file
+	#Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $ghettoVCB
 
 echo ""
 echo "Retrieving ESXi $baseESXiVer installation bundles to choose from, this may take a while..."
@@ -73,24 +74,24 @@ echo ""
 echo "Finished retrieving $imageProfile"
 echo ""
 
-if (!(Test-Path $nvmeFling)){Invoke-WebRequest -Method "GET" $flingUrl$($nvmeFling) -OutFile $($nvmeFling)}
 if (!(Test-Path $usbFling)){Invoke-WebRequest -Method "GET" $flingUrl$($usbFling) -OutFile $($usbFling)}
-if (!(Test-Path $ghettoVCB)){Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $($ghettoVCB)}
+#if (!(Test-Path $nvmeFling)){Invoke-WebRequest -Method "GET" $flingUrl$($nvmeFling) -OutFile $($nvmeFling)}
+#if (!(Test-Path $ghettoVCB)){Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $($ghettoVCB)}
 
 echo ""
 echo "Adding extra packages to the local depot"
 echo ""
 
 Add-EsxSoftwareDepot "$($imageProfile).zip"
-Add-EsxSoftwareDepot $nvmeFling
 Add-EsxSoftwareDepot $usbFling
-Add-EsxSoftwareDepot $ghettoVCB
+#Add-EsxSoftwareDepot $nvmeFling
+#Add-EsxSoftwareDepot $ghettoVCB
 
 echo ""
 echo "Creating a custom profile" 
 echo ""
 
-$newProfileName = $($imageProfile.Replace("standard", "nvme-usbnic"))
+$newProfileName = $($imageProfile.Replace("standard", "usbnic"))
 $newProfile = New-EsxImageProfile -CloneProfile $imageProfile -name $newProfileName -Vendor "Itiligent"
 Set-EsxImageProfile -ImageProfile $newProfile -AcceptanceLevel CommunitySupported
 
@@ -98,9 +99,9 @@ echo ""
 echo "Injecting extra packages into the custom profile"
 echo ""
 
-Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "nvme-community" -Force
 Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "vmkusb-nic-fling" -Force
-Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "ghettoVCB" -Force
+#Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "nvme-community" -Force
+#Add-EsxSoftwarePackage -ImageProfile $newProfile -SoftwarePackage "ghettoVCB" -Force
 
 echo ""
 echo "Exporting the custom profile to an ISO..."
