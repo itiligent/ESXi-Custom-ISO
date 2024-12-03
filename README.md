@@ -43,7 +43,7 @@ For ESXi 7 & 8 ISOs GO TO STEP 3, For ESXi 6.x GO TO STEP 2
 
 6. Adjust the PowerCLI python.exe path and Customer Improvement Program settings
 	Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false
-	Set-PowerCLIConfiguration -PythonPath C:\Users\$env:USERNAME\AppData\Local\Programs\Python\Python37\python.exe
+	Set-PowerCLIConfiguration -PythonPath C:\Users\$env:USERNAME\AppData\Local\Programs\Python\Python<PYTHON_VERSION>\python.exe
 
 7. Run esxi7.ps1 or esxi8.ps1 to build your ISO
 ```
