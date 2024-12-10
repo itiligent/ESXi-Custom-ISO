@@ -194,20 +194,29 @@ esxcfg-volume -M vmfs_label_name	# mounts the datastore persistent
 ```
 vim-cmd hostsvc/firmware/sync_config && vim-cmd hostsvc/firmware/backup_config
 ```
-Next, download the newly created config bundle from the http link in the above command output
+Next, download *configBundle*.tgz  from the http link given
+
+### Restore ESXi config
+change backup file name to configBundle.tgz
+copy to configBundle.tgz to /tmp
+vim-cmd hostsvc/maintenance_mode_enter
+vim-cmd hostsvc/firmware/restore_config 0
+vim-cmd hostsvc/firmware/restore_config 1 # override UUID
+
 
 ### Adding Rsync to ESXi for backups and much more: 
 See [here](https://github.com/itiligent/RSYNC-for-ESXi) for using rsync with ESXi
 
 
-
 ### UESXi 8 setup tweaks 
 ```
 ease password quality control:  retry=5 min=1,1,1,1,1
+password remember history: 0
 config ntpd: 0.au.pool.ntp.org, 1.au.pool.ntp.org, 2.au.pool.ntp.org, 3.au.pool.ntp.org
 config portgroups
+change switch security (promiscious mode, mac changes, forged transmits
 config autostart vms
-power policy
+set power policy
 
 add eddsa ssh keys:
 	/etc/ssh/sshd_config
@@ -219,3 +228,10 @@ add eddsa ssh keys:
 		add pub key
 		/etc/init.d/SSH restart
 ```
+
+### VM auto usb passthrough 
+usb.autoConnect.device0 = "0xbda:0x9210"
+usb.autoConnect.device1 = "0x1e0e:0x9011"
+usb.autoConnect.device2 = "0x4e8:0x6863"
+usb.autoConnect.device3 = "0x152d:0x578"
+usb.autoConnect.device4 = "0xbda:0x8156"
