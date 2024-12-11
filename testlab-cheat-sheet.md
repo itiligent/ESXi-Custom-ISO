@@ -212,11 +212,15 @@ See [here](https://github.com/itiligent/RSYNC-for-ESXi) for using rsync with ESX
 ```
 ease password quality control:  retry=5 min=1,1,1,1,1
 password remember history: 0
+change root password
 config ntpd: 0.au.pool.ntp.org, 1.au.pool.ntp.org, 2.au.pool.ntp.org, 3.au.pool.ntp.org
+start ntpd
 config portgroups
 change switch security (promiscious mode, mac changes, forged transmits
-config autostart vms
+add passthrough devices
 set power policy
+config autostart and any vms
+
 
 add eddsa ssh keys:
 	/etc/ssh/sshd_config
@@ -230,8 +234,8 @@ add eddsa ssh keys:
 ```
 
 ### VM auto usb passthrough 
-usb.autoConnect.device0 = "0xbda:0x9210"
-usb.autoConnect.device1 = "0x1e0e:0x9011"
-usb.autoConnect.device2 = "0x4e8:0x6863"
-usb.autoConnect.device3 = "0x152d:0x578"
-usb.autoConnect.device4 = "0xbda:0x8156"
+usb.autoConnect.device0 = "0xbda:0x9210" # ssd enclosure
+usb.autoConnect.device1 = "0x1e0e:0x9011" # 4g modem
+usb.autoConnect.device2 = "0x4e8:0x6863" # android tether mode
+usb.autoConnect.device3 = "0x152d:0x578" # Sata usb 
+usb.autoConnect.device4 = "0xbda:0x8156" # RTL 2.5gbe
