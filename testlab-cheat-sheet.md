@@ -27,7 +27,7 @@
 
     Download offline bundle from https://github.com/lamw/ghettoVCB/releases and copy to /tmp on ESXi
     
-    Install instructions on the developer's website dont work, instead:
+    Install instructions on the developer's website cause errors, do this instead:
     unzip /tmp/vghetto-ghettoVCB-offline-bundle.zip
     esxcli software vib install -v /tmp/vib20/ghettoVCB/virtuallyGhetto_bootbank_ghettoVCB_1.0.0-0.0.0.vib -f
 
@@ -104,8 +104,8 @@ First, zero out drive free space:
 #!/bin/bash
 
 # Define the filesystem mount point and zeroed file location here
-MOUNT_POINT="/data"
-ZERO_FILE_LOCATION="${MOUNT_POINT}/zerofile"
+MOUNT_POINT="/"
+ZERO_FILE_LOCATION="${HOME}/zerofile" # Assumes home is on "/" mount point
 
 # Function to calculate the available free space in bytes for the specified mount point
 get_free_space() {
@@ -208,9 +208,9 @@ vim-cmd hostsvc/firmware/restore_config 1 # override UUID
 See [here](https://github.com/itiligent/RSYNC-for-ESXi) for using rsync with ESXi
 
 
-### UESXi 8 setup tweaks 
+### ESXi 8 homelab setup tweaks 
 ```
-ease password quality control:  retry=5 min=1,1,1,1,1
+lower password quality control:  retry=5 min=1,1,1,1,1
 password remember history: 0
 change root password
 config ntpd: 0.au.pool.ntp.org, 1.au.pool.ntp.org, 2.au.pool.ntp.org, 3.au.pool.ntp.org
@@ -233,7 +233,7 @@ add eddsa ssh keys:
 		/etc/init.d/SSH restart
 ```
 
-### VM auto usb passthrough 
+### VM auto usb passthrough syntax 
 usb.autoConnect.device0 = "0xbda:0x9210" # ssd enclosure
 usb.autoConnect.device1 = "0x1e0e:0x9011" # 4g modem
 usb.autoConnect.device2 = "0x4e8:0x6863" # android tether mode
