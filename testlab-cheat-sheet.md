@@ -234,12 +234,13 @@ add eddsa ssh keys:
 ```
 
 ### VM auto usb passthrough syntax 
+```
 usb.autoConnect.device0 = "0xbda:0x9210" # ssd enclosure
 usb.autoConnect.device1 = "0x1e0e:0x9011" # 4g modem
 usb.autoConnect.device2 = "0x4e8:0x6863" # android tether mode
 usb.autoConnect.device3 = "0x152d:0x578" # Sata usb 
 usb.autoConnect.device4 = "0xbda:0x8156" # RTL 2.5gbe
-
+```
 ### Check Esxi NVME smart data
 
 esxcli storage core device smart get -d t10.NVMe____TEAM_TM8FPK002T_________________________0200000000000000
