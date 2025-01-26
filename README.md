@@ -4,8 +4,11 @@
 - Each script will present a menu to select which patch level to build your ISO.
 
 ### [esxi8.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi8.ps1) 
-- Builds an ESXi 8.x iso with latest NVME & USB NIC Fling drivers + latest GhettoVCB backup. (The VMware NIC Fling is included natively from 8.x)
-	- _For earlier 800, 80U1 or 80U2 builds, see script notes to select the correct USB NIC Fling_
+- Builds an ESXi 8.x iso with latest USB NIC Fling drivers.
+  - The VMware NIC Fling is now included natively from 8.x
+  - The NVME drivers are deprectated
+  - GhetoVCB vibs are not currently compatible with esxi 8. Manually use ghetto scripts for to ESXi 8.
+  - For various earlier 800, 80U1 or 80U2 builds see script notes to include the correct USB NIC Fling
 
 ### [esxi7.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi7.ps1)
 - Builds an ESXi 7.x iso with latest NVME, NIC & USB NIC Fling drivers + latest GhettoVCB backup.
