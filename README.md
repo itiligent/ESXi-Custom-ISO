@@ -19,6 +19,8 @@
 
 ### 🛠️ Instructions for building ESXi ISOs:
 
+- The below is tested on Powershell 5.1 (the default for Winddows 10 & 11) For bleeding edge Powershell versions you may need to manually install the latest PowerCLI from https://developer.broadcom.com/tools/vmware-powercli/latest
+
 ```
 1. Enable Powershell script policy:
 	Set-ExecutionPolicy Unrestricted -Scope CurrentUser # and select All
@@ -33,7 +35,7 @@ For ESXi 7 & 8 ISOs GO TO STEP 3, For ESXi 6.x GO TO STEP 2
 		c. Run: Get-ChildItem -Path $env:PROGRAMFILES\WindowsPowerShell\Modules\ -Recurse | Unblock-File 
 		d. Run the esxi6.7.ps1 script to build the 6.7 ISO.
  
-3. For ESXi 7.x and 8.x ISOs: 
+3. For ESXi 7.x and 8.x ISOs:
 	a. Run: Install-Module VMware.PowerCLI -Scope CurrentUser # Select Y to install from untrusted repo
 	b. Install Python (tested with 3.11.9) and check "Add Python to PATH" a the start of install
 	c. At end of Python install, select "Disable path length limit"
@@ -50,7 +52,7 @@ For ESXi 7 & 8 ISOs GO TO STEP 3, For ESXi 6.x GO TO STEP 2
 
 7. Run esxi7.ps1 or esxi8.ps1 to build your ISO
 ```
-
+  
 - Zimaboard/Zimablade users note:
   - Zimaboard's optional RTL 8125 2.5GbE NIC driver for ESXi 6.7 can be found [here](https://github.com/itiligent/ESXi-Custom-ISO/raw/main/6-updates/net-r8125-9.011.00-10.vib)
     - To manually install 2.5GbE driver:`esxcli software vib install -v net-r8125-9.011.00-10.vib`
