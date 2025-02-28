@@ -41,14 +41,14 @@ For ESXi 7 & 8 ISOs GO TO STEP 3, For ESXi 6.x GO TO STEP 2
 	c. At end of Python install, select "Disable path length limit"
 
 4. Upgrade Python PIP:
-	C:\Users\%username%\AppData\Local\Programs\Python\Python312\python.exe -m pip install --upgrade pip
+	C:\Users\%username%\AppData\Local\Programs\Python\Python<MAJOR_VERSION>\python.exe -m pip install --upgrade pip
 
 5. Add Python dependencies for PowerCLI
-	C:\Users\%username%\AppData\Local\Programs\Python\Python312\Scripts\pip3.12.exe install six psutil lxml pyopenssl
+	C:\Users\%username%\AppData\Local\Programs\Python\PythonPython<MAJOR_VERSION>\Scripts\pipPython<MAJOR_VERSION>.exe install six psutil lxml pyopenssl
 
 6. Adjust the PowerCLI python.exe path and Customer Improvement Program settings
 	Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false
-	Set-PowerCLIConfiguration -PythonPath C:\Users\$env:USERNAME\AppData\Local\Programs\Python\Python<PYTHON_VERSION>\python.exe
+	Set-PowerCLIConfiguration -PythonPath C:\Users\$env:USERNAME\AppData\Local\Programs\Python\Python<MAJOR_VERSION>\python.exe
 
 7. Run esxi7.ps1 or esxi8.ps1 to build your ISO
 ```
