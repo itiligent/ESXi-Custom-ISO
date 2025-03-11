@@ -19,7 +19,7 @@
 
 ### 🛠️ Instructions for building ESXi ISOs:
 
-- The below is tested on Powershell 5.1 (the default for Winddows 10 & 11). For optional (latest) Powershell versions you may need to manually install the latest PowerCLI from https://developer.broadcom.com/tools/vmware-powercli/latest
+- The below is tested on Powershell 5.1 (the default for Windows 10 & 11). For those who have manually upgraded to later Powershell versions, you may need to manually install the latest PowerCLI from https://developer.broadcom.com/tools/vmware-powercli/latest
 
 ```
 1. Enable Powershell script policy:
