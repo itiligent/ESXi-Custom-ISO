@@ -19,7 +19,7 @@
 
 ### 🛠️ Instructions for building ESXi ISOs:
 
-- The below is tested on Powershell 5.1 (the default for Winddows 10 & 11). For optional (latest) Powershell versions you may need to manually install the latest PowerCLI from https://developer.broadcom.com/tools/vmware-powercli/latest
+- The below is tested on Powershell 5.1 (the default for Windows 10 & 11). For those who have manually upgraded to later Powershell versions, you may need to use the latest PowerCLI version from here: https://developer.broadcom.com/tools/vmware-powercli/latest
 
 ```
 1. Enable Powershell script policy:
@@ -29,7 +29,7 @@
 For ESXi 7 & 8 ISOs GO TO STEP 3, For ESXi 6.x GO TO STEP 2
 
 2. ESXi 6.7 ISOs require older Powercli.  You must OFFLINE INSTALL PowerCli as follows:
-		Download it here: https://developer.vmware.com/web/tool/12.7.0/vmware-powercli
+		Download it here: https://developer.broadcom.com/tools/vmware-powercli/12.7.0
 		a. Start with a FRESH Windows system (Powercli's uninstaller does not remove everything)
 		b. Extract contents of PowerCLI zip to %ProgramFiles%\WindowsPowerShell\Modules 
 		c. Run: Get-ChildItem -Path $env:PROGRAMFILES\WindowsPowerShell\Modules\ -Recurse | Unblock-File 
