@@ -12,11 +12,17 @@ $baseESXiVer = "7"
 # or 
 # https://higherlogicdownload.s3.amazonaws.com/BROADCOM/092f2b51-ca4c-4dca-abc0-070f25ade760/UploadedImages/Flings_Content/filename.zip"
 
-# Define Fling archive source link
+# Define source links
 $flingUrl = "https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/7-updates/"
 $nvmeFling = "nvme-community-driver_1.0.1.0-3vmw.700.1.0.15843807-component-18902434.zip"
 $nicFling = "Net-Community-Driver_1.2.7.0-1vmw.700.1.0.15843807_19480755.zip"
 $usbFling = "ESXi703-VMKUSB-NIC-FLING-55634242-component-19849370.zip"
+
+# Nominate a custom esxi depot zip file:
+# (Run this script in the same direcrtory as file $manualUpdate1 to build locally without downloading)
+$manualUpdate1 = "ESXi-7.0U3s-24585291-standard.zip"
+# Custom esxi depot zip file link:
+$manualUpdateUrl1 = "https://my.microsoftpersonalcontent.com/personal/d019e1a076a71cc7/_layouts/15/download.aspx?UniqueId=6d2c3958-545b-4a8b-a694-2818ccddf3c0&Translate=false&tempauth=v1e.eyJzaXRlaWQiOiI4ODVlNTNhZC1kMmJhLTQ0MTktYjdiZS1jYmRmMTg5MjQ1OTEiLCJhcHBpZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDA0ODE3MTBhNCIsImF1ZCI6IjAwMDAwMDAzLTAwMDAtMGZmMS1jZTAwLTAwMDAwMDAwMDAwMC9teS5taWNyb3NvZnRwZXJzb25hbGNvbnRlbnQuY29tQDkxODgwNDBkLTZjNjctNGM1Yi1iMTEyLTM2YTMwNGI2NmRhZCIsImV4cCI6IjE3NDQ1MTQ4NjkifQ.0EH-MyFff1RKir0oC0lW6dEynLsw94C5sqoysip1od_5yngSmNZGPh8hdtbmqSikLvOE-Zvt6aHNjkHq8Ex4q27bZC9AqYWfRNISG5z8_1JQLy2ce0jnTJK0Db_5epOs4TPyGLx13ATv5dX3q2phJsYYTxp9iVhxvbzTwAqF7AJyxHi5atvKhAN9bK8ASq3S2HWmgamStQ4VIvalqumKdLMbr6tyfhixOGMzdMS44cTJyH9HG4XvA0rCrnJWtg9_dgz5Js3UQUB4zJpsRaxi08GPEps9qiVmDYc0M136H7fx1WWjuVxAJAKSn6grvI3GmXqY-oee5zzXpNvoYB-MzFVnDYkRUkfiLJKUZgYb2rpe15lDpd4nnCrq9HlRA_cwEGPmvjxoR5ZLMLRNhrMM6w.GRS9QAaWNq-HEvW_mqqRRG1NXYD6HGN-vdG0YqtAtWM&ApiVersion=2.0"
 
 # Define Ghetto VCB repo for latest release download via Github API
 $ghettoUrl = "https://api.github.com/repos/lamw/ghettoVCB/releases/latest"
@@ -37,12 +43,39 @@ $ghettoDownloadUrl = $response.assets | Where-Object { $_.name -eq $ghettoVCB } 
 Invoke-WebRequest -Uri $ghettoDownloadUrl -OutFile $ghettoVCB
 
 echo ""
-echo "Retrieving ESXi $baseESXiVer installation bundles to choose from, this may take a while..."
+echo "Retrieving latest ESXi $baseESXiVer release information..."
 echo ""
 
-Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
-$imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
-echo ""
+# Prompt user for update choice
+do {
+    echo "Choose a specific release:"
+    echo "1. Manually downloaded depot $($manualUpdate1)"
+    echo "2. Choose an image profile from VMware's online index"
+    echo "" 
+   $choice = Read-Host "Enter your choice (1-2)"
+} while ($choice -notmatch "^[1-2]$")
+
+switch ($choice) {
+    "1" {
+        echo ""
+        echo "Downloading $($manualUpdate1) & creating ESXi depot"
+        if (!(Test-Path $manualUpdate1)){Invoke-WebRequest -Uri $manualUpdateUrl1 -OutFile $($manualUpdate1)}
+        Add-EsxSoftwareDepot $manualUpdate1
+        $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
+    }
+    
+    
+    "2" {
+        echo ""
+        echo "Downloading vmw-depot-index.xml & building ESXi depot, please be patient..."
+        # Retrieve available image profiles from VMware
+        Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
+        $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
+        echo ""
+        echo "ESXi-7.0U3s-24585291-standard.zip was the last public download" 
+    }
+}
+
 # Print a list of available profiles to choose from
 for ($i = 0; $i -lt $imageProfiles.Count; $i++) {
     echo "$($i + 1). $($imageProfiles[$i].Name) - Created on: $($imageProfiles[$i].CreationTime)"
