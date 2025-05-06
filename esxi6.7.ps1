@@ -9,6 +9,7 @@
 
 # Set ESXi depot base version
 $baseESXiVer = "6.7"
+$TOKEN = "<insert_your_broadcom_token_here>"
 
 # Dowload Flings from Broadcom here: 
 # https://community.broadcom.com/flings/home 
@@ -57,7 +58,7 @@ do {
     echo "1. 2025 extended support update $($manualUpdate1)"
     echo "2. 2024 extended support update $($manualUpdate2)"
     echo "3. 2022 final general support update $($manualUpdate3)"
-    echo "4. Choose an older image profile from VMware's online index"
+    echo "4. Choose image profile from VMware online index - REQUIRES BROADCOM TOKEN"
     echo "" 
    $choice = Read-Host "Enter your choice (1-4)"
 } while ($choice -notmatch "^[1-4]$")
@@ -68,6 +69,7 @@ switch ($choice) {
         echo "Downloading $($manualUpdate1) & creating ESXi depot"
         if (!(Test-Path $manualUpdate1)){Invoke-WebRequest -Uri $manualUpdateUrl1 -OutFile $($manualUpdate1)}
         Add-EsxSoftwareDepot $manualUpdate1
+        Start-Sleep 2
         $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
     }
     
@@ -76,6 +78,7 @@ switch ($choice) {
         echo "Downloading $($manualUpdate2) & creating ESXi depot"
         if (!(Test-Path $manualUpdate2)){Invoke-WebRequest -Uri $manualUpdateUrl2 -OutFile $($manualUpdate2)}
         Add-EsxSoftwareDepot $manualUpdate2
+        Start-Sleep 2
         $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
 
     }
@@ -85,6 +88,7 @@ switch ($choice) {
         echo "Downloading $($manualUpdate3) & creating ESXi depot"
         if (!(Test-Path $manualUpdate3)){Invoke-WebRequest -Uri $manualUpdateUrl3 -OutFile $($manualUpdate3)}
         Add-EsxSoftwareDepot $manualUpdate3
+        Start-Sleep 2
         $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
 
     }
@@ -93,7 +97,8 @@ switch ($choice) {
         echo ""
         echo "Downloading vmw-depot-index.xml & building ESXi depot, please be patient..."
         # Retrieve available image profiles from VMware
-        Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
+        Add-EsxSoftwareDepot https://dl.broadcom.com/$TOKEN/PROD/COMP/ESX_HOST/main/vmw-depot-index.xml
+        Start-Sleep 2
         $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
         echo ""
         echo "ESXi-6.7.0-20221001001s-standard was the last general release" 
