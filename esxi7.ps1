@@ -6,6 +6,7 @@
 
 # Set ESXi depot base version
 $baseESXiVer = "7"
+$TOKEN = "<insert_your_broadcom_token_here>"
 
 # Dowload Flings from Broadcom here: 
 # https://community.broadcom.com/flings/home 
@@ -50,7 +51,7 @@ echo ""
 do {
     echo "Choose a specific release:"
     echo "1. Manually downloaded depot $($manualUpdate1)"
-    echo "2. Choose an image profile from VMware's online index"
+    echo "2. Choose image profile from VMware online index - REQUIRES BROADCOM TOKEN"
     echo "" 
    $choice = Read-Host "Enter your choice (1-2)"
 } while ($choice -notmatch "^[1-2]$")
@@ -61,6 +62,7 @@ switch ($choice) {
         echo "Downloading $($manualUpdate1) & creating ESXi depot"
         if (!(Test-Path $manualUpdate1)){Invoke-WebRequest -Uri $manualUpdateUrl1 -OutFile $($manualUpdate1)}
         Add-EsxSoftwareDepot $manualUpdate1
+        Start-Sleep 2
         $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
     }
     
@@ -69,7 +71,8 @@ switch ($choice) {
         echo ""
         echo "Downloading vmw-depot-index.xml & building ESXi depot, please be patient..."
         # Retrieve available image profiles from VMware
-        Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
+        Add-EsxSoftwareDepot https://dl.broadcom.com/$TOKEN/PROD/COMP/ESX_HOST/main/vmw-depot-index.xml
+        Start-Sleep 2
         $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
         echo ""
         echo "ESXi-7.0U3s-24585291-standard.zip was the last public download" 
