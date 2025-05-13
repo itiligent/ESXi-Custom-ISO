@@ -6,7 +6,7 @@
 
 # Set ESXi depot base version
 $baseESXiVer = "7"
-$TOKEN = "<insert_your_broadcom_token_here>"
+$TOKEN = ""
 
 # Dowload Flings from Broadcom here: 
 # https://community.broadcom.com/flings/home 
@@ -23,7 +23,7 @@ $usbFling = "ESXi703-VMKUSB-NIC-FLING-55634242-component-19849370.zip"
 # (Run this script in the same direcrtory as file $manualUpdate1 to build locally without downloading)
 $manualUpdate1 = "ESXi-7.0U3s-24585291-standard.zip"
 # Custom esxi depot zip file link:
-$manualUpdateUrl1 = "https://my.microsoftpersonalcontent.com/personal/d019e1a076a71cc7/_layouts/15/download.aspx?UniqueId=6d2c3958-545b-4a8b-a694-2818ccddf3c0&Translate=false&tempauth=v1e.eyJzaXRlaWQiOiI4ODVlNTNhZC1kMmJhLTQ0MTktYjdiZS1jYmRmMTg5MjQ1OTEiLCJhcHBpZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDA0ODE3MTBhNCIsImF1ZCI6IjAwMDAwMDAzLTAwMDAtMGZmMS1jZTAwLTAwMDAwMDAwMDAwMC9teS5taWNyb3NvZnRwZXJzb25hbGNvbnRlbnQuY29tQDkxODgwNDBkLTZjNjctNGM1Yi1iMTEyLTM2YTMwNGI2NmRhZCIsImV4cCI6IjE3NDQ1MTQ4NjkifQ.0EH-MyFff1RKir0oC0lW6dEynLsw94C5sqoysip1od_5yngSmNZGPh8hdtbmqSikLvOE-Zvt6aHNjkHq8Ex4q27bZC9AqYWfRNISG5z8_1JQLy2ce0jnTJK0Db_5epOs4TPyGLx13ATv5dX3q2phJsYYTxp9iVhxvbzTwAqF7AJyxHi5atvKhAN9bK8ASq3S2HWmgamStQ4VIvalqumKdLMbr6tyfhixOGMzdMS44cTJyH9HG4XvA0rCrnJWtg9_dgz5Js3UQUB4zJpsRaxi08GPEps9qiVmDYc0M136H7fx1WWjuVxAJAKSn6grvI3GmXqY-oee5zzXpNvoYB-MzFVnDYkRUkfiLJKUZgYb2rpe15lDpd4nnCrq9HlRA_cwEGPmvjxoR5ZLMLRNhrMM6w.GRS9QAaWNq-HEvW_mqqRRG1NXYD6HGN-vdG0YqtAtWM&ApiVersion=2.0"
+$manualUpdateUrl1 = "https://itiligent-my.sharepoint.com/personal/david_itiligent_com_au/_layouts/15/guestaccess.aspx?share=ET5ST6mX6-xIu7UYHHTBO0YBKq2D2aqnraimBSZq_K6FvA&e=aTBhUt&download=1"
 
 # Define Ghetto VCB repo for latest release download via Github API
 $ghettoUrl = "https://api.github.com/repos/lamw/ghettoVCB/releases/latest"

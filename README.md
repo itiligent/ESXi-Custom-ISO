@@ -10,7 +10,24 @@
 ### [esxi6.7.ps1](https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/esxi6.7.ps1) (Zimaboard compatible)
 - Builds an ESXi 6.7 iso with latest NVME & USB NIC drivers, Zimaboard Realtek 1GbE NIC driver + latest GhettoVCB backup.
 
-### 🛠️ Instructions:
+---
+
+### 🛠️ Using Scripts Without A Broadcom Subscription (After Free Offline Updates Discontinued)
+
+If you have a Broadcom access token, skip to step 5.
+
+1. Find an alternate source for your ESXi offline depot zip file
+2. Set the zip file download URL in the script:
+   `manualUpdateUrl1="your_custom_url.zip"`
+3. Set the expected zip filename:
+   `manualUpdate1="your-esxi-offline-bundle.zip"`
+4. Run the script and choose **Option 1** (or run the script from the same directory as source zip file)
+5. Save your your Broadcom acess between quotes in `$TOKEN = ""` and run the script with **Option 2**
+
+> ⚠️ **Important:** Always verify the SHA256 checksum when using non-VMware sources. Official release checksums can be found [here](https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere/8-0/release-notes/esxi-update-and-patch-release-notes.html).
+
+
+### 🛠️ PowerCLI Environment Setup Instructions:
 
 - The below is tested on Powershell 5.1 (the default for Windows 10 & 11). For those who have manually upgraded to a later Powershell version, you may need to use the latest PowerCLI version from here: https://developer.broadcom.com/tools/vmware-powercli/latest. Don't install a bleeding edge Python version - tested with Python 3.12.9) 
 

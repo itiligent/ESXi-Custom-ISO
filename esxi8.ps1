@@ -6,7 +6,7 @@
 
 # Set ESXi depot base version
 $baseESXiVer = "8"
-$TOKEN = "<insert_your_broadcom_token_here>"
+$TOKEN = ""
 
 # Dowload Flings from Broadcom here: 
 # https://community.broadcom.com/flings/home 
@@ -22,7 +22,7 @@ $usbFling = "ESXi803-VMKUSB-NIC-FLING-76444229-component-24179899.zip"
 $manualUpdate1 = "ESXi-8.0U3e-24674464-standard.zip" 
 
 # Custom esxi depot zip file link:
-$manualUpdateUrl1 = "https://my.microsoftpersonalcontent.com/personal/d019e1a076a71cc7/_layouts/15/download.aspx?UniqueId=f5954d1d-748f-435d-826d-98ce8e98b7ab&Translate=false&tempauth=v1e.eyJzaXRlaWQiOiI4ODVlNTNhZC1kMmJhLTQ0MTktYjdiZS1jYmRmMTg5MjQ1OTEiLCJhcHBpZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDA0ODE3MTBhNCIsImF1ZCI6IjAwMDAwMDAzLTAwMDAtMGZmMS1jZTAwLTAwMDAwMDAwMDAwMC9teS5taWNyb3NvZnRwZXJzb25hbGNvbnRlbnQuY29tQDkxODgwNDBkLTZjNjctNGM1Yi1iMTEyLTM2YTMwNGI2NmRhZCIsImV4cCI6IjE3NDY1MTExNDEifQ.2_Jl10exRMV9TpN3sipIX1RFVh_hHB2JgHsczeE0jliGMreYgIeVGW4ni5CseL6bb7mK0potvmkGYONeSq2L5CRWxgoivz_IHBZv8SkJvUjr5bsYLNl3oC_MSF_CYccq8S3oYlUbbtKu_zc1PmAnw6RtVQpVdYrnKX2IUFkjU8RfYxTINoROnZZIXgLpsz9ZnGeT_Ld-ZUPPf-E2HyJyZdGWlP0PJBB6vDhzIQ2ywKROlozuZmArQPvQZlDSlA17lSN1UQ0wE-YyuwWCwP-tpCYxvzvIqnessHPEL85ktgwRrk5yPnLkmCmtwYicctcVx2zwO9iO3Q_3r_kOkHNMQqvgtL60pIZQmoKaTYZDrODa8sebzj4Z9cneiXCxRKdE_TXun-llq6Px0eTV_8Ydbg.12O20mzicihIImYwRFZFgGjXWd16q2e3zIvNB5WHu-I&ApiVersion=2.0"
+$manualUpdateUrl1 = "https://itiligent-my.sharepoint.com/personal/david_itiligent_com_au/_layouts/15/guestaccess.aspx?share=Ed1VKVshlPNGu4sRc22DGmsBm1eDtdfP-PuqXB8AErs7yg&download=1"
 
 echo ""
 echo "Retrieving latest ESXi $baseESXiVer release information..."
