@@ -51,7 +51,7 @@ To restore default policy:
 	C:\Users\%username%\AppData\Local\Programs\Python\Python<MAJOR_VERSION>\python.exe -m pip install --upgrade pip
 
 5. Add Python dependencies for PowerCLI
-	C:\Users\%username%\AppData\Local\Programs\Python\PythonPython<MAJOR_VERSION>\Scripts\pipPython<MAJOR_VERSION>.exe install six psutil lxml pyopenssl
+	C:\Users\%username%\AppData\Local\Programs\Python\Python<MAJOR_VERSION>\Scripts\pip<MAJOR_VERSION>.exe install six psutil lxml pyopenssl
 
 6. Adjust the PowerCLI python.exe path and Customer Improvement Program settings
 	Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false
