@@ -257,60 +257,52 @@ esxcli storage core device smart get -d t10.NVMe____TEAM_TM8FPK002T_____________
 # clonevm.sh - Clone a VM on ESXi (current state only)
 # Usage: ./clonevm.sh <SourceVM_Name> <ClonedVM_Name> [Datastore]
 
-# Determine default datastore
+# Default datastore
 DEFAULT_DATASTORE=$(esxcli storage filesystem list | awk '$1 ~ /^\/vmfs/ {print $3; exit}')
 
-# Script arguments
+# Arguments
 SRC_VM="$1"
 NEW_VM="$2"
 DATASTORE="${3:-$DEFAULT_DATASTORE}"
 
-# Validate arguments
+# Validate
 if [ $# -lt 2 ]; then
     echo "Usage: $0 <SourceVM_Name> <ClonedVM_Name> [Datastore]"
     echo "If Datastore is omitted, default is $DEFAULT_DATASTORE"
     exit 1
 fi
 
-# Paths for source and new VM
+# Paths
 SRC_PATH="/vmfs/volumes/${DATASTORE}/${SRC_VM}"
 NEW_PATH="/vmfs/volumes/${DATASTORE}/${NEW_VM}"
 
-# Check source VM exists
-if [ ! -d "$SRC_PATH" ]; then
-    echo "ERROR: Source VM $SRC_PATH not found!"
-    exit 1
-fi
-
-# Check target VM does not already exist
-if [ -d "$NEW_PATH" ]; then
-    echo "ERROR: Target VM $NEW_PATH already exists!"
-    exit 1
-fi
+# Check source and target
+[ ! -d "$SRC_PATH" ] && { echo "ERROR: Source VM $SRC_PATH not found!"; exit 1; }
+[ -d "$NEW_PATH" ] && { echo "ERROR: Target VM $NEW_PATH already exists!"; exit 1; }
 
 echo "Cloning VM '$SRC_VM' to '$NEW_VM' on datastore '$DATASTORE'..."
 mkdir "$NEW_PATH"
 
-# Copy VMX file
+# Copy VMX
 SRC_VMX=$(ls "$SRC_PATH"/*.vmx | head -n 1)
-if [ -z "$SRC_VMX" ]; then
-    echo "ERROR: No VMX file found in source VM folder!"
-    exit 1
-fi
+[ -z "$SRC_VMX" ] && { echo "ERROR: No VMX file found!"; exit 1; }
 NEW_VMX="$NEW_PATH/${NEW_VM}.vmx"
 cp "$SRC_VMX" "$NEW_VMX"
 
-# Clone disks referenced in VMX
+# Copy and update VMXF if exists
+SRC_VMXF=$(ls "$SRC_PATH"/*.vmxf 2>/dev/null | head -n 1)
+if [ -n "$SRC_VMXF" ]; then
+    NEW_VMXF="$NEW_PATH/$(basename "$SRC_VMXF" | sed "s#$SRC_VM#$NEW_VM#")"
+    cp "$SRC_VMXF" "$NEW_VMXF"
+    sed -i "s#$SRC_VM#$NEW_VM#g" "$NEW_VMXF"
+fi
+
+# Clone disks
 DISK_COUNT=0
 for FILE in $(awk -F'"' '/fileName/ {print $2}' "$SRC_VMX"); do
-    # Skip CD-ROM/ISO files
     case "$FILE" in *.iso) continue ;; esac
-
     SRC_DISK="$SRC_PATH/$FILE"
-    if [ ! -f "$SRC_DISK" ]; then
-        echo " Source disk $SRC_DISK not found, skipping"
-        continue
-    fi
+    [ ! -f "$SRC_DISK" ] && { echo " Source disk $SRC_DISK not found, skipping"; continue; }
 
     if [ $DISK_COUNT -eq 0 ]; then
         NEW_DISK_NAME="${NEW_VM}.vmdk"
@@ -321,33 +313,31 @@ for FILE in $(awk -F'"' '/fileName/ {print $2}' "$SRC_VMX"); do
     echo " Cloning $SRC_DISK -> $NEW_DISK_NAME"
     vmkfstools -i "$SRC_DISK" "$NEW_PATH/$NEW_DISK_NAME" -d thin
 
-    # Update VMX to point to the new disk
+    # Update VMX disk reference
     sed -i "s#fileName = \"$FILE\"#fileName = \"$NEW_DISK_NAME\"#" "$NEW_VMX"
-
     DISK_COUNT=$((DISK_COUNT + 1))
 done
 
-if [ $DISK_COUNT -eq 0 ]; then
-    echo "ERROR: No valid disks found to clone. Aborting."
-    exit 1
-fi
+[ $DISK_COUNT -eq 0 ] && { echo "ERROR: No valid disks found!"; exit 1; }
 
-# Update VM display name
+# Update VMX metadata to new VM name
 sed -i "s/displayName = \".*\"/displayName = \"${NEW_VM}\"/" "$NEW_VMX"
+sed -i "s#^migrate.hostLog = \".*\"#migrate.hostLog = \"./${NEW_VM}.hlog\"#" "$NEW_VMX"
+sed -i "s#^vmxstats.filename = \".*\"#vmxstats.filename = \"${NEW_VM}.scoreboard\"#" "$NEW_VMX"
+sed -i "s#^nvram = \".*\"#nvram = \"${NEW_VM}.nvram\"#" "$NEW_VMX"
 
 # Remove old MAC addresses
 sed -i '/ethernet[0-9]\.generatedAddress/d' "$NEW_VMX"
 sed -i '/ethernet[0-9]\.addressType/d' "$NEW_VMX"
 
-# Register the new VM
+# Optional: replace any remaining occurrences of the old VM name in VMX
+sed -i "s#$SRC_VM#$NEW_VM#g" "$NEW_VMX"
+
+# Register new VM
 VMID=$(vim-cmd solo/registervm "$NEW_VMX")
-if [ -z "$VMID" ]; then
-    echo "ERROR: Failed to register new VM."
-    exit 1
-fi
+[ -z "$VMID" ] && { echo "ERROR: Failed to register VM."; exit 1; }
 
 echo "Clone complete. New VM registered with VMID: $VMID"
 echo "Power it on with: vim-cmd vmsvc/power.on $VMID"
-
 
 ```
