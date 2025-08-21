@@ -101,61 +101,93 @@ First, zero out drive free space:
 - Windows VM: ```sdelete.exe -z c:```
 - Linux VM: 
 ```
-#!/bin/bash
+#!/bin/sh
+# clonevm.sh - Clone a VM on ESXi (current state only)
+# Usage: ./clonevm.sh <SourceVM_Name> <ClonedVM_Name> [Datastore]
 
-# Define the filesystem mount point and zeroed file location here
-MOUNT_POINT="/"
-ZERO_FILE_LOCATION="${HOME}/zerofile" # Assumes home is on "/" mount point
+# Default datastore
+DEFAULT_DATASTORE=$(esxcli storage filesystem list | awk '$1 ~ /^\/vmfs/ {print $3; exit}')
 
-# Function to calculate the available free space in bytes for the specified mount point
-get_free_space() {
-    local mount_point=$1
-    # Use 'df' to get the free space available on the specified filesystem
-    free_space=$(df "$mount_point" | tail -1 | awk '{print $4}')
-    echo $((free_space * 1024))  # Convert from KB to bytes
-}
+# Arguments
+SRC_VM="$1"
+NEW_VM="$2"
+DATASTORE="${3:-$DEFAULT_DATASTORE}"
 
-# Function to calculate the maximum file size to create
-calculate_max_file_size() {
-    local free_space=$1
-    # Define a safety margin (e.g., 1 GB) to prevent running out of space
-    local safety_margin=$((1 * 1024 * 1024 * 1024))  # 1 GB in bytes
-    # Calculate the maximum file size by subtracting the safety margin
-    local max_file_size=$((free_space - safety_margin))
-    # Ensure that the maximum file size is not negative
-    if [ $max_file_size -lt 0 ]; then
-        max_file_size=0
-    fi
-    echo $max_file_size
-}
-
-# Get the available free space for the specified mount point
-free_space=$(get_free_space "$MOUNT_POINT")
-
-# Calculate the maximum file size
-max_file_size=$(calculate_max_file_size $free_space)
-
-# Convert max file size to a more readable format
-if [ $max_file_size -gt 0 ]; then
-    max_file_size_mb=$((max_file_size / 1024 / 1024))
-    echo "Maximum file size for zeroing out: ${max_file_size_mb} MB"
-
-    # Create a large file filled with zeros to ensure all free space is filled
-    echo "Creating zeroed file of size ${max_file_size_mb} MB at ${ZERO_FILE_LOCATION}..."
-    dd if=/dev/zero of="${ZERO_FILE_LOCATION}" bs=1M status=progress seek=$max_file_size_mb
-
-    # Remove the zeroed file to make the space available for shrinking
-    echo "Removing the zeroed file..."
-    rm -f "${ZERO_FILE_LOCATION}"
-
-    # Sync filesystem to ensure all data is written to disk
-    echo "Syncing filesystem..."
-    sync
-
-    echo "Zeroing and sync complete. Now you can proceed to compact the VM disk from VMware tools."
-else
-    echo "Not enough free space to create the zeroed file. Please free up some space before proceeding."
+# Validate
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 <SourceVM_Name> <ClonedVM_Name> [Datastore]"
+    echo "If Datastore is omitted, default is $DEFAULT_DATASTORE"
+    exit 1
 fi
+
+# Paths
+SRC_PATH="/vmfs/volumes/${DATASTORE}/${SRC_VM}"
+NEW_PATH="/vmfs/volumes/${DATASTORE}/${NEW_VM}"
+
+# Check source and target
+[ ! -d "$SRC_PATH" ] && { echo "ERROR: Source VM $SRC_PATH not found!"; exit 1; }
+[ -d "$NEW_PATH" ] && { echo "ERROR: Target VM $NEW_PATH already exists!"; exit 1; }
+
+echo "Cloning VM '$SRC_VM' to '$NEW_VM' on datastore '$DATASTORE'..."
+mkdir "$NEW_PATH"
+
+# Copy VMX
+SRC_VMX=$(ls "$SRC_PATH"/*.vmx | head -n 1)
+[ -z "$SRC_VMX" ] && { echo "ERROR: No VMX file found!"; exit 1; }
+NEW_VMX="$NEW_PATH/${NEW_VM}.vmx"
+cp "$SRC_VMX" "$NEW_VMX"
+
+# Copy and update VMXF if exists
+SRC_VMXF=$(ls "$SRC_PATH"/*.vmxf 2>/dev/null | head -n 1)
+if [ -n "$SRC_VMXF" ]; then
+    NEW_VMXF="$NEW_PATH/$(basename "$SRC_VMXF" | sed "s#$SRC_VM#$NEW_VM#")"
+    cp "$SRC_VMXF" "$NEW_VMXF"
+    sed -i "s#$SRC_VM#$NEW_VM#g" "$NEW_VMXF"
+fi
+
+# Clone disks
+DISK_COUNT=0
+for FILE in $(awk -F'"' '/fileName/ {print $2}' "$SRC_VMX"); do
+    case "$FILE" in *.iso) continue ;; esac
+    SRC_DISK="$SRC_PATH/$FILE"
+    [ ! -f "$SRC_DISK" ] && { echo " Source disk $SRC_DISK not found, skipping"; continue; }
+
+    if [ $DISK_COUNT -eq 0 ]; then
+        NEW_DISK_NAME="${NEW_VM}.vmdk"
+    else
+        NEW_DISK_NAME="${NEW_VM}_disk${DISK_COUNT}.vmdk"
+    fi
+
+    echo " Cloning $SRC_DISK -> $NEW_DISK_NAME"
+    vmkfstools -i "$SRC_DISK" "$NEW_PATH/$NEW_DISK_NAME" -d thin
+
+    # Update VMX disk reference
+    sed -i "s#fileName = \"$FILE\"#fileName = \"$NEW_DISK_NAME\"#" "$NEW_VMX"
+    DISK_COUNT=$((DISK_COUNT + 1))
+done
+
+[ $DISK_COUNT -eq 0 ] && { echo "ERROR: No valid disks found!"; exit 1; }
+
+# Update VMX metadata to new VM name
+sed -i "s/displayName = \".*\"/displayName = \"${NEW_VM}\"/" "$NEW_VMX"
+sed -i "s#^migrate.hostLog = \".*\"#migrate.hostLog = \"./${NEW_VM}.hlog\"#" "$NEW_VMX"
+sed -i "s#^vmxstats.filename = \".*\"#vmxstats.filename = \"${NEW_VM}.scoreboard\"#" "$NEW_VMX"
+sed -i "s#^nvram = \".*\"#nvram = \"${NEW_VM}.nvram\"#" "$NEW_VMX"
+
+# Remove old MAC addresses
+sed -i '/ethernet[0-9]\.generatedAddress/d' "$NEW_VMX"
+sed -i '/ethernet[0-9]\.addressType/d' "$NEW_VMX"
+
+# Optional: replace any remaining occurrences of the old VM name in VMX
+sed -i "s#$SRC_VM#$NEW_VM#g" "$NEW_VMX"
+
+# Register new VM
+VMID=$(vim-cmd solo/registervm "$NEW_VMX")
+[ -z "$VMID" ] && { echo "ERROR: Failed to register VM."; exit 1; }
+
+echo "Clone complete. New VM registered with VMID: $VMID"
+echo "Power it on with: vim-cmd vmsvc/power.on $VMID"
+
 
 ```
 
