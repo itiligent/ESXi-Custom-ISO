@@ -255,54 +255,86 @@ esxcli storage core device smart get -d t10.NVMe____TEAM_TM8FPK002T_____________
 ```
 #!/bin/sh
 # clonevm.sh - Clone a VM on ESXi (current state only)
-# Usage: ./clonevm.sh <SourceVM_Name> <ClonedVM_Name> [Datastore]
+# Usage:
+#   ./clonevm.sh <SourceVM_Name> <ClonedVM_Name> [Datastore] [--keep-mac]
+
+set -eu
+
+usage() {
+    echo "Usage: $0 [SourceVM_Name] [ClonedVM_Name] [Datastore] [--keep-mac]"
+    exit 1
+}
 
 # Default datastore
-DEFAULT_DATASTORE=$(esxcli storage filesystem list | awk '$1 ~ /^\/vmfs/ {print $3; exit}')
+DEFAULT_DATASTORE=$(esxcli storage filesystem list | awk '$1 ~ /^\/vmfs/ {print $2; exit}')
 
-# Arguments
-SRC_VM="$1"
-NEW_VM="$2"
-DATASTORE="${3:-$DEFAULT_DATASTORE}"
+# Argument parsing
+SRC_VM=""
+NEW_VM=""
+DATASTORE=""
+KEEP_MAC=false
 
-# Validate
-if [ $# -lt 2 ]; then
-    echo "Usage: $0 <SourceVM_Name> <ClonedVM_Name> [Datastore]"
-    echo "If Datastore is omitted, default is $DEFAULT_DATASTORE"
-    exit 1
-fi
+for arg in "$@"; do
+    case "$arg" in
+        --keep-mac|-k) KEEP_MAC=true ;;
+        -h|--help) usage ;;
+        -*)
+            echo "Unknown option: $arg"
+            usage ;;
+        *)
+            if [ -z "$SRC_VM" ]; then
+                SRC_VM="$arg"
+            elif [ -z "$NEW_VM" ]; then
+                NEW_VM="$arg"
+            elif [ -z "$DATASTORE" ]; then
+                DATASTORE="$arg"
+            else
+                echo "ERROR: Too many non-option args: $arg"
+                usage
+            fi
+            ;;
+    esac
+done
 
-# Paths
+[ -z "$SRC_VM" ] && usage
+[ -z "$NEW_VM" ] && usage
+[ -z "${DATASTORE:-}" ] && DATASTORE="$DEFAULT_DATASTORE"
+
 SRC_PATH="/vmfs/volumes/${DATASTORE}/${SRC_VM}"
 NEW_PATH="/vmfs/volumes/${DATASTORE}/${NEW_VM}"
 
-# Check source and target
 [ ! -d "$SRC_PATH" ] && { echo "ERROR: Source VM $SRC_PATH not found!"; exit 1; }
 [ -d "$NEW_PATH" ] && { echo "ERROR: Target VM $NEW_PATH already exists!"; exit 1; }
 
-echo "Cloning VM '$SRC_VM' to '$NEW_VM' on datastore '$DATASTORE'..."
-mkdir "$NEW_PATH"
+echo "Cloning VM '$SRC_VM' -> '$NEW_VM' on datastore '$DATASTORE'..."
+mkdir "$NEW_PATH" || { echo "ERROR: Cannot create $NEW_PATH"; exit 1; }
 
 # Copy VMX
-SRC_VMX=$(ls "$SRC_PATH"/*.vmx | head -n 1)
-[ -z "$SRC_VMX" ] && { echo "ERROR: No VMX file found!"; exit 1; }
+SRC_VMX=$(ls "$SRC_PATH"/*.vmx 2>/dev/null | head -n 1)
+[ -z "$SRC_VMX" ] && { echo "ERROR: No VMX file found in $SRC_PATH!"; exit 1; }
 NEW_VMX="$NEW_PATH/${NEW_VM}.vmx"
-cp "$SRC_VMX" "$NEW_VMX"
+cp "$SRC_VMX" "$NEW_VMX" || { echo "ERROR: Copy VMX failed"; exit 1; }
 
-# Copy and update VMXF if exists
+# Copy/update VMXF
 SRC_VMXF=$(ls "$SRC_PATH"/*.vmxf 2>/dev/null | head -n 1)
 if [ -n "$SRC_VMXF" ]; then
-    NEW_VMXF="$NEW_PATH/$(basename "$SRC_VMXF" | sed "s#$SRC_VM#$NEW_VM#")"
+    NEW_VMXF="$NEW_PATH/${NEW_VM}.vmxf"
     cp "$SRC_VMXF" "$NEW_VMXF"
-    sed -i "s#$SRC_VM#$NEW_VM#g" "$NEW_VMXF"
 fi
 
-# Clone disks
+# Build list of disk filenames (skip ISOs/floppies)
+DISK_LIST_FILE=$(mktemp)
+trap 'rm -f "$DISK_LIST_FILE"' EXIT
+awk -F'"' '/fileName/ {print $2}' "$SRC_VMX" \
+    | grep -v -E '\.iso$|\.ISO$|\.flp$|\.FLP$' \
+    > "$DISK_LIST_FILE"
+
+# Clone disks and force VMX references to new names
 DISK_COUNT=0
-for FILE in $(awk -F'"' '/fileName/ {print $2}' "$SRC_VMX"); do
-    case "$FILE" in *.iso) continue ;; esac
+while IFS= read -r FILE; do
+    [ -z "$FILE" ] && continue
     SRC_DISK="$SRC_PATH/$FILE"
-    [ ! -f "$SRC_DISK" ] && { echo " Source disk $SRC_DISK not found, skipping"; continue; }
+    [ ! -f "$SRC_DISK" ] && { echo "  Source disk missing, skipping: $SRC_DISK"; continue; }
 
     if [ $DISK_COUNT -eq 0 ]; then
         NEW_DISK_NAME="${NEW_VM}.vmdk"
@@ -310,34 +342,50 @@ for FILE in $(awk -F'"' '/fileName/ {print $2}' "$SRC_VMX"); do
         NEW_DISK_NAME="${NEW_VM}_disk${DISK_COUNT}.vmdk"
     fi
 
-    echo " Cloning $SRC_DISK -> $NEW_DISK_NAME"
-    vmkfstools -i "$SRC_DISK" "$NEW_PATH/$NEW_DISK_NAME" -d thin
+    echo "  Cloning: '$SRC_DISK' -> '$NEW_DISK_NAME'"
+    vmkfstools -i "$SRC_DISK" "$NEW_PATH/$NEW_DISK_NAME" -d thin || {
+        echo "ERROR: vmkfstools clone failed for $SRC_DISK"; exit 1;
+    }
 
-    # Update VMX disk reference
-    sed -i "s#fileName = \"$FILE\"#fileName = \"$NEW_DISK_NAME\"#" "$NEW_VMX"
+    # Force replace any vmdk filename in VMX with the new name
+    sed -i "s#fileName = \".*\.vmdk\"#fileName = \"$NEW_DISK_NAME\"#" "$NEW_VMX"
+
     DISK_COUNT=$((DISK_COUNT + 1))
-done
+done < "$DISK_LIST_FILE"
 
-[ $DISK_COUNT -eq 0 ] && { echo "ERROR: No valid disks found!"; exit 1; }
+[ $DISK_COUNT -eq 0 ] && { echo "ERROR: No valid disks found in VMX."; exit 1; }
 
-# Update VMX metadata to new VM name
-sed -i "s/displayName = \".*\"/displayName = \"${NEW_VM}\"/" "$NEW_VMX"
+# UEFI NVRAM handling
+SRC_NVRAM=$(ls "$SRC_PATH"/*.nvram 2>/dev/null | head -n 1)
+if [ -n "$SRC_NVRAM" ]; then
+    cp "$SRC_NVRAM" "$NEW_PATH/${NEW_VM}.nvram"
+fi
+if grep -q '^nvram = ' "$NEW_VMX"; then
+    sed -i "s#^nvram = \".*\"#nvram = \"${NEW_VM}.nvram\"#" "$NEW_VMX"
+else
+    echo "nvram = \"${NEW_VM}.nvram\"" >> "$NEW_VMX"
+fi
+
+# Update VMX metadata (force all names)
+sed -i "s#^displayName = \".*\"#displayName = \"${NEW_VM}\"#" "$NEW_VMX"
 sed -i "s#^migrate.hostLog = \".*\"#migrate.hostLog = \"./${NEW_VM}.hlog\"#" "$NEW_VMX"
 sed -i "s#^vmxstats.filename = \".*\"#vmxstats.filename = \"${NEW_VM}.scoreboard\"#" "$NEW_VMX"
-sed -i "s#^nvram = \".*\"#nvram = \"${NEW_VM}.nvram\"#" "$NEW_VMX"
 
-# Remove old MAC addresses
-sed -i '/ethernet[0-9]\.generatedAddress/d' "$NEW_VMX"
-sed -i '/ethernet[0-9]\.addressType/d' "$NEW_VMX"
-
-# Optional: replace any remaining occurrences of the old VM name in VMX
-sed -i "s#$SRC_VM#$NEW_VM#g" "$NEW_VMX"
+# Remove stale MACs unless --keep-mac
+if [ "$KEEP_MAC" = false ]; then
+    sed -i '/ethernet[0-9]\.generatedAddress/d' "$NEW_VMX"
+    sed -i '/ethernet[0-9]\.addressType/d' "$NEW_VMX"
+fi
 
 # Register new VM
 VMID=$(vim-cmd solo/registervm "$NEW_VMX")
 [ -z "$VMID" ] && { echo "ERROR: Failed to register VM."; exit 1; }
 
-echo "Clone complete. New VM registered with VMID: $VMID"
-echo "Power it on with: vim-cmd vmsvc/power.on $VMID"
+# Final summary
+echo "------------------------------------------------------------"
+echo "Clone complete:"
+echo "  Source VM : $SRC_VM"
+echo "  Target VM : $NEW_VM"
+echo "  Datastore : $DATASTORE"
 
 ```
