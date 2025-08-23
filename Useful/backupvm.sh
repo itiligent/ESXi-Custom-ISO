@@ -51,6 +51,22 @@ set -eu
 
 clear
 
+usage() {
+    echo "Usage: $0 [--restore] [--dry-run] --all | --name <VMNAME>"
+    echo
+    echo "Examples:"
+    echo "  $0 --all                   # Back up all VMs except excluded"
+    echo "  $0 --name <VMNAME>         # Back up a specific VM"
+    echo "  $0 --restore --all         # Restore all VMs except excluded"
+    echo "  $0 --restore --name <VM>   # Restore a specific VM"
+    echo "  $0 --dry-run --all         # Preview which VMs would be backed up"
+    echo "  $0 --restore --dry-run     # Preview restore targets"
+    echo "  $0 --help                  # Show this help message"
+    echo
+    exit 1
+}
+
+
 # Gather any exlcuded VMs 
 is_excluded() {
     vm="$1"
@@ -71,19 +87,19 @@ EOF
 # Parse script arguments
 RESTORE_MODE=0
 DRYRUN_MODE=0
+ARG_MODE=""
+ARG_VM=""
 
 # Show usage if no arguments
 echo
 if [ $# -eq 0 ]; then
-    echo "AAA Usage: $0 [--restore] [--dry-run] --all | --name <VMNAME>"
-    echo
-    exit 1
+		[ $# -eq 0 ] && usage
 fi
 
 # Detect --restore, --dry-run before main args
 while [ $# -gt 0 ]; do
     case "$1" in
-	--help)    echo "Usage: $0 [--restore] [--dry-run] --all | --name <VMNAME>"; exit 0 ;;
+	--help) usage;;
         --restore) RESTORE_MODE=1 ;;
         --dry-run) DRYRUN_MODE=1 ;;
         --all)     ARG_MODE="all" ;;
@@ -96,13 +112,14 @@ while [ $# -gt 0 ]; do
             ARG_MODE="name"
             ARG_VM="$1"
             ;;
-        *) 
-            echo "Usage: $0 [--restore] [--dry-run] --all | --name <VMNAME>"; echo; exit 1
-            ;;
+        *) usage;;
     esac
     shift
 
 done
+
+# Ensure required mode args are set
+[ -z "$ARG_MODE" ] && usage
 
 # Clear out leftover temp files or processes from previous (interrupted) ghettoVCB runs 
 echo "--------------------------------------------------"
@@ -139,20 +156,33 @@ echo
 # Backup list generator
 generate_backuplist() {
     > "$BACKUPLIST"
-    vim-cmd vmsvc/getallvms | awk '
-    NR>1 && $1 ~ /^[0-9]+$/ {
-        name=""
-        for(i=2;i<=NF;i++){
-            if($i ~ /^\[/) break
-            name = (name=="" ? $i : name " " $i)
-        }
-        if(name != "") print name
-    }' | while IFS= read -r vm; do
-        vm="$(echo "$vm" | sed "s/^[[:space:]]*//;s/[[:space:]]*$//")"
-        if ! is_excluded "$vm"; then
-            echo "$vm" >> "$BACKUPLIST"
-        fi
-    done
+
+    if [ "$RESTORE_MODE" -eq 1 ]; then
+        # In restore mode, build list from backup storage
+        echo "Building backup list from backup repository: $VM_BACKUP_VOLUME"
+        find "$VM_BACKUP_VOLUME" -maxdepth 1 -mindepth 1 -type d | while IFS= read -r vm_dir; do
+            vm="$(basename "$vm_dir")"
+            if ! is_excluded "$vm"; then
+                echo "$vm" >> "$BACKUPLIST"
+            fi
+        done
+    else
+        # In backup mode, build list from registered VMs
+        vim-cmd vmsvc/getallvms | awk '
+        NR>1 && $1 ~ /^[0-9]+$/ {
+            name=""
+            for(i=2;i<=NF;i++){
+                if($i ~ /^\[/) break
+                name = (name=="" ? $i : name " " $i)
+            }
+            if(name != "") print name
+        }' | while IFS= read -r vm; do
+            vm="$(echo "$vm" | sed "s/^[[:space:]]*//;s/[[:space:]]*$//")"
+            if ! is_excluded "$vm"; then
+                echo "$vm" >> "$BACKUPLIST"
+            fi
+        done
+    fi
 }
 
 if [ "$ARG_MODE" = "all" ]; then
