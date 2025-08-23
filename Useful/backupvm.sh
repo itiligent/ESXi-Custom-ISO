@@ -6,7 +6,8 @@
 #   Wrapper around ghettoVCB to simplify backing up and restoring ESXi VMs.
 #   Features include:
 #     - Backup & restore with exclusions
-#     - Backup & restore individual vms or all
+#     - Backup & restore individual vms or all including bare metal restores
+#     		- Searches backup datastore (in ghettoVCB.conf) for all restore candidates (with --restore --all arguments)
 #     - Handles VM names with spaces
 #     - Dry-run mode for preview without execution
 # 	  - Prompt to rename vm(s) and edit the restore file prior to restore
@@ -15,7 +16,7 @@
 # Usage:
 #   ./script.sh --all                   # Back up all VMs except excluded
 #   ./script.sh --name <VMNAME>         # Back up a specific VM
-#   ./script.sh --restore --all         # Restore all VMs except excluded
+#   ./script.sh --restore --all         # Restore all VMs in backup datastore except excluded
 #   ./script.sh --restore --name <VM>   # Restore a specific VM
 #   ./script.sh --dry-run --all         # Preview which VMs would be backed up
 #   ./script.sh --restore --dry-run     # Preview restore targets
@@ -55,13 +56,13 @@ usage() {
     echo "Usage: $0 [--restore] [--dry-run] --all | --name <VMNAME>"
     echo
     echo "Examples:"
-    echo "  $0 --all                   # Back up all VMs except excluded"
-    echo "  $0 --name <VMNAME>         # Back up a specific VM"
-    echo "  $0 --restore --all         # Restore all VMs except excluded"
-    echo "  $0 --restore --name <VM>   # Restore a specific VM"
+    echo "  $0 --all                   # Backup all VMs (except excluded)"
+    echo "  $0 --name <VMNAME>         # Backup a specific VM"
     echo "  $0 --dry-run --all         # Preview which VMs would be backed up"
-    echo "  $0 --restore --dry-run     # Preview restore targets"
-    echo "  $0 --help                  # Show this help message"
+	echo "  $0 --restore --all         # Restore all VMs in backup datastore (except excluded)"
+    echo "  $0 --restore --name <VM>   # Restore a specific VM"
+    echo "  $0 --restore --dry-run     # Preview restore targets in backup datastore"
+    echo "  $0 --help                  # Shows this help message"
     echo
     exit 1
 }
