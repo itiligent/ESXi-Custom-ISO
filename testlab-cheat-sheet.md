@@ -260,6 +260,8 @@ esxcli storage core device smart get -d t10.NVMe____TEAM_TM8FPK002T_____________
 
 set -eu
 
+clear
+
 usage() {
     echo "Usage: $0 [SourceVM_Name] [ClonedVM_Name] [Datastore] [--keep-mac]"
     exit 1
@@ -296,6 +298,27 @@ for arg in "$@"; do
     esac
 done
 
+# Clear out any orphan processes from previous runs 
+echo "--------------------------------------------------"
+cleanup_vmkfstools() {
+    echo "Checking for leftover vmkfstools processes..."
+    while true; do
+        # get PIDs safely
+        pids=$(ps | grep vmkfstools | grep -v grep | awk '{print $1}' || true)
+        [ -z "$pids" ] && break
+        for pid in $pids; do
+            echo "  Killing PID $pid"
+            kill -9 "$pid" 2>/dev/null || true   # ignore errors
+            sleep 0.2
+        done
+        sleep 0.5
+    done
+}
+
+trap 'echo "Script interrupted!"; cleanup_vmkfstools; exit 1' INT TERM
+
+cleanup_vmkfstools || true
+
 [ -z "$SRC_VM" ] && usage
 [ -z "$NEW_VM" ] && usage
 [ -z "${DATASTORE:-}" ] && DATASTORE="$DEFAULT_DATASTORE"
@@ -330,30 +353,33 @@ awk -F'"' '/fileName/ {print $2}' "$SRC_VMX" \
     > "$DISK_LIST_FILE"
 
 # Clone disks and force VMX references to new names
-DISK_COUNT=0
-while IFS= read -r FILE; do
-    [ -z "$FILE" ] && continue
-    SRC_DISK="$SRC_PATH/$FILE"
+# Build temporary list of disks from VMX (exclude ISOs/floppies)
+DISK_LIST_FILE=$(mktemp)
+trap 'rm -f "$DISK_LIST_FILE"' EXIT
+awk -F'"' '/fileName/ && $2 !~ /\.iso$|\.ISO$|\.flp$|\.FLP$/ {print $2}' "$SRC_VMX" > "$DISK_LIST_FILE"
+
+DISK_COUNT=1
+while IFS= read -r SRC_FILE; do
+    [ -z "$SRC_FILE" ] && continue
+    SRC_DISK="$SRC_PATH/$SRC_FILE"
     [ ! -f "$SRC_DISK" ] && { echo "  Source disk missing, skipping: $SRC_DISK"; continue; }
 
-    if [ $DISK_COUNT -eq 0 ]; then
-        NEW_DISK_NAME="${NEW_VM}.vmdk"
-    else
-        NEW_DISK_NAME="${NEW_VM}_disk${DISK_COUNT}.vmdk"
-    fi
+    # New naming convention: vmname-000001.vmdk, vmname-000002.vmdk, ...
+    NEW_DISK_NAME=$(printf "%s-%06d.vmdk" "$NEW_VM" "$DISK_COUNT")
 
     echo "  Cloning: '$SRC_DISK' -> '$NEW_DISK_NAME'"
     vmkfstools -i "$SRC_DISK" "$NEW_PATH/$NEW_DISK_NAME" -d thin || {
         echo "ERROR: vmkfstools clone failed for $SRC_DISK"; exit 1;
     }
 
-    # Force replace any vmdk filename in VMX with the new name
-    sed -i "s#fileName = \".*\.vmdk\"#fileName = \"$NEW_DISK_NAME\"#" "$NEW_VMX"
+    # Replace only this disk reference in VMX
+    ESC_SRC_FILE=$(echo "$SRC_FILE" | sed 's/[\/&]/\\&/g')
+    sed -i "s#fileName = \"$ESC_SRC_FILE\"#fileName = \"$NEW_DISK_NAME\"#" "$NEW_VMX"
 
     DISK_COUNT=$((DISK_COUNT + 1))
 done < "$DISK_LIST_FILE"
 
-[ $DISK_COUNT -eq 0 ] && { echo "ERROR: No valid disks found in VMX."; exit 1; }
+[ $DISK_COUNT -eq 1 ] && { echo "ERROR: No valid disks found in VMX."; exit 1; }
 
 # UEFI NVRAM handling
 SRC_NVRAM=$(ls "$SRC_PATH"/*.nvram 2>/dev/null | head -n 1)
@@ -387,5 +413,10 @@ echo "Clone complete:"
 echo "  Source VM : $SRC_VM"
 echo "  Target VM : $NEW_VM"
 echo "  Datastore : $DATASTORE"
+echo "  Path      : $NEW_PATH"
+echo "  VMID      : $VMID"
+echo "------------------------------------------------------------"
+echo "Power on with: vim-cmd vmsvc/power.on $VMID"
+
 
 ```
