@@ -8,27 +8,27 @@
 #   Wrapper for ghettoVCB to simplify backing up and restoring ESXi VMs.
 #   Features include:
 #     - Backup & restore with exclusions
-#     - Backup & restore individual vms or all including bare metal restores
-#     		- Search of backup datastore (in ghettoVCB.conf) for restore candidates (with --restore --all arguments)
-#     - Handles VM names with spaces
+#     - Backup & restore individual, a selection, or all VMs for bare metal restores
+#     - Tracking restore candidates. (Script automatically searches the default backup datastore from ghettoVCB.conf
+#     - Handling of VM names with spaces
+# 	  - Prompts to rename vm(s) during restores 
+# 	  - Prompt to manually edit the ghettoVCB restore list prior to running 
 #     - Dry-run mode for preview without execution
-# 	  - Prompt to rename vm(s) during restores 
-# 	  - Prompt to manually edit the ghettoVCB restore list prior to running
 #     - Cleans up orphan vmkfstools processes or /tmp/ghetto* files after any script interruptions
 #
 # Usage:
 #   ./script.sh --all                   # Back up all VMs except excluded
 #   ./script.sh --name <VMNAME>         # Back up a specific VM
-#   ./script.sh --restore --all         # Restore all VMs in backup datastore except excluded
+#   ./script.sh --restore --all         # Restore all VMs in backup datastore except excluded, with option to manually edit restore list
 #   ./script.sh --restore --name <VM>   # Restore a specific VM
 #   ./script.sh --dry-run --all         # Preview which VMs would be backed up
 #   ./script.sh --restore --dry-run     # Preview restore targets
 #   ./script.sh --help                  # Show these options
 #
 # Requirements:
-#   - ghettoVCB.sh, ghettoVCB-restore.sh, and ghettoVCB.conf placed in the same directory
+#   - ghettoVCB.sh, ghettoVCB-restore.sh, and ghettoVCB.conf to be placed in the same directory
 #   - Must run on an ESXi host with vim-cmd available
-#   - Must only run one instance of this script at a time as (script clears any prior vmkfstools processes)
+#   - Must run only one instance of this script at a time (script stops any running vmkfstools processes)
 # =============================================================================
 
 # Excluded VMs (exact names, one VM per line)
