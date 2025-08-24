@@ -1,21 +1,25 @@
 #!/bin/sh
 # =============================================================================
 # ghettoVCB Backup & Restore Wrapper
+# David Harrop 
+# August 2025
 #
 # Description:
-#   Wrapper around ghettoVCB to simplify backing up and restoring ESXi VMs.
+#   Wrapper for ghettoVCB to simplify backing up and restoring ESXi VMs.
 #   Features include:
 #     - Backup & restore with exclusions
-#     - Backup & restore individual vms or all
+#     - Backup & restore individual vms or all including bare metal restores
+#     		- Search of backup datastore (in ghettoVCB.conf) for restore candidates (with --restore --all arguments)
 #     - Handles VM names with spaces
 #     - Dry-run mode for preview without execution
-# 	  - Prompt to rename vm(s) and edit the restore file prior to restore
-#     - Cleans up orphan vmkfstools processes or /tmp/ghetto* files after script interruption
+# 	  - Prompt to rename vm(s) during restores 
+# 	  - Prompt to manually edit the ghettoVCB restore list prior to running
+#     - Cleans up orphan vmkfstools processes or /tmp/ghetto* files after any script interruptions
 #
 # Usage:
 #   ./script.sh --all                   # Back up all VMs except excluded
 #   ./script.sh --name <VMNAME>         # Back up a specific VM
-#   ./script.sh --restore --all         # Restore all VMs except excluded
+#   ./script.sh --restore --all         # Restore all VMs in backup datastore except excluded
 #   ./script.sh --restore --name <VM>   # Restore a specific VM
 #   ./script.sh --dry-run --all         # Preview which VMs would be backed up
 #   ./script.sh --restore --dry-run     # Preview restore targets
@@ -24,13 +28,14 @@
 # Requirements:
 #   - ghettoVCB.sh, ghettoVCB-restore.sh, and ghettoVCB.conf placed in the same directory
 #   - Must run on an ESXi host with vim-cmd available
-#   - Must only run one instance of this script at a time
+#   - Must only run one instance of this script at a time as (script clears any prior vmkfstools processes)
 # =============================================================================
 
-# Excluded VMs (exact names, one per line)
+# Excluded VMs (exact names, one VM per line)
 EXCLUDE_VMS="
 Router1
 "
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 GHB_CONF="$SCRIPT_DIR/ghettoVCB.conf"
 BACKUPLIST="$SCRIPT_DIR/backuplist.txt"
@@ -40,10 +45,11 @@ VM_BACKUP_VOLUME=$(
   | cut -d'=' -f2- \
   | sed 's/^"[[:space:]]*//; s/[[:space:]]*"//; s/[[:space:]]*$//'
 )
+# VM_BACKUP_VOLUME="manually override here"
 # ensure no trailing slash
 VM_BACKUP_VOLUME="${VM_BACKUP_VOLUME%/}"
 RECOVERY_DATASTORE=$(esxcli storage filesystem list | awk '$1 ~ /^\/vmfs/ {print $2; exit}')
-#RECOVERY_DATASTORE= "Manually enter restoration datastore name"
+#RECOVERY_DATASTORE= "manually override here"
 RECOVERY_DATASTORE_PATH="/vmfs/volumes/$RECOVERY_DATASTORE/"
 RESTORE_DISK_FORMAT="3" # 1 = zeroedthick, 2 = 2gbsparse, 3 = thin, 4 = eagerzeroedthick
 
@@ -55,17 +61,16 @@ usage() {
     echo "Usage: $0 [--restore] [--dry-run] --all | --name <VMNAME>"
     echo
     echo "Examples:"
-    echo "  $0 --all                   # Back up all VMs except excluded"
-    echo "  $0 --name <VMNAME>         # Back up a specific VM"
-    echo "  $0 --restore --all         # Restore all VMs except excluded"
-    echo "  $0 --restore --name <VM>   # Restore a specific VM"
+    echo "  $0 --all                   # Backup all VMs (except excluded)"
+    echo "  $0 --name <VMNAME>         # Backup a specific VM"
     echo "  $0 --dry-run --all         # Preview which VMs would be backed up"
-    echo "  $0 --restore --dry-run     # Preview restore targets"
-    echo "  $0 --help                  # Show this help message"
+	echo "  $0 --restore --all         # Restore all VMs in backup datastore (except excluded)"
+    echo "  $0 --restore --name <VM>   # Restore a specific VM"
+    echo "  $0 --restore --dry-run     # Preview restore targets in backup datastore"
+    echo "  $0 --help                  # Shows this help message"
     echo
     exit 1
 }
-
 
 # Gather any exlcuded VMs 
 is_excluded() {
