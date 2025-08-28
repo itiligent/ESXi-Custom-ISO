@@ -200,12 +200,12 @@ vim-cmd hostsvc/firmware/sync_config && vim-cmd hostsvc/firmware/backup_config
 Next, download *configBundle*.tgz  from the http link given
 
 ### Restore ESXi config
-change backup file name to configBundle.tgz
-copy to configBundle.tgz to /tmp
+change backup file name to configBundle.tgz and copy to configBundle.tgz to /tmp
+```
 vim-cmd hostsvc/maintenance_mode_enter
-vim-cmd hostsvc/firmware/restore_config 0
-vim-cmd hostsvc/firmware/restore_config 1 # override UUID
-
+vim-cmd hostsvc/firmware/restore_config 0 # if restoring to same server
+vim-cmd hostsvc/firmware/restore_config 1 # if restoring to different hw and/or there is a UUID mismatch
+```
 
 ### Adding Rsync to ESXi for backups and much more: 
 See [here](https://github.com/itiligent/RSYNC-for-ESXi) for using rsync with ESXi
