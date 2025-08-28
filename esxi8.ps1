@@ -9,20 +9,18 @@ $baseESXiVer = "8"
 $TOKEN = ""
 
 # Dowload Flings from Broadcom here: 
-# https://community.broadcom.com/flings/home 
-# or 
-# https://higherlogicdownload.s3.amazonaws.com/BROADCOM/092f2b51-ca4c-4dca-abc0-070f25ade760/UploadedImages/Flings_Content/filename.zip"
+# https://support.broadcom.com/group/ecx/productdownloads?subfamily=Flings&freeDownloads=true
 
 # Define Fling source file & link
 $flingUrl = "https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/8-updates/" # Fling archive in case they disappear again
 $usbFling = "ESXi803-VMKUSB-NIC-FLING-76444229-component-24179899.zip"
 
-# Nominate a custom esxi depot zip file:
+# Nominate a custom esxi depot zip file and link:
 # (Run this script in the same direcrtory as file $manualUpdate1 to build locally without downloading)
-$manualUpdate1 = "ESXi-8.0U3e-24674464-standard.zip" 
-
-# Custom esxi depot zip file link:
-$manualUpdateUrl1 = "https://itiligent-my.sharepoint.com/personal/david_itiligent_com_au/_layouts/15/guestaccess.aspx?share=Ed1VKVshlPNGu4sRc22DGmsBm1eDtdfP-PuqXB8AErs7yg&download=1"
+#$manualUpdate1 = "ESXi-8.0U3e-24674464-standard.zip"
+#$manualUpdateUrl1 = "https://itiligent-my.sharepoint.com/personal/david_itiligent_com_au/_layouts/15/guestaccess.aspx?share=Ed1VKVshlPNGu4sRc22DGmsBm1eDtdfP-PuqXB8AErs7yg&download=1" #VMware-ESXi-8.0U3e-24674464-depot.zip
+$manualUpdate1 = "VMware-ESXi-8.0U3g-24859861-depot.zip"
+$manualUpdateUrl1 = "https://itiligent-my.sharepoint.com/personal/david_itiligent_com_au/_layouts/15/guestaccess.aspx?share=EW_xj8c5HTFLmoOeiNsjwKgBtIhKez8HmDNQKwoH6I5etg&e=udgNQt&download=1"
 
 echo ""
 echo "Retrieving latest ESXi $baseESXiVer release information..."
