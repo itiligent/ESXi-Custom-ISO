@@ -176,10 +176,11 @@ scp -rp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /vmfs/volume
 
 SCP copy over the network with sshkeys (set priv key file perms with chmod 400): 
 ```
-RSA ssh keys:
-    scp -rp -i /productLocker/dest-priv-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /vmfs/volumes/source_path/* user@x.x.x.x:/destination_path/
-EdSA ssh keys:
-   scp -rp -i /productLocker/dest-priv-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-ed25519  /vmfs/volumes/source_path/* user@x.x.x.x:/destination_path/
+from a separate linux ssh host
+scp -rp -i /path/to/privkey -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@x.x.x.1:/vmfs/volumes/datastore1/source/* root@x.x.x.2:/vmfs/volumes/datastore1/destination/
+
+from esxi:
+    scp -rp -i /path/to/privkey -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /vmfs/volumes/source/* user@x.x.x.x:/destination/
 ```
 
 ### Cloning an ESXi OS disk with a VMFS datastore present
