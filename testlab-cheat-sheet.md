@@ -13,7 +13,8 @@
 	3. SSH into Esxi | cd to the dirctory the bundle uploaded to  	
     4. esxcli system maintenanceMode set -e true
 	5. esxcli software sources profile list -d /full_path/ESXi-update-package.zip # checks to see available profiles in the bundle
-	6. esxcli software profile update -p ESXi_PROFILE_NAME -d /full_path/ESXi-update-package.zip # updates Esxi server
+	6. TEST!:  esxcli software profile update -p ESXi_PROFILE_NAME -d /full_path/ESXi-update-package.zip --dry-run
+	7. esxcli software profile update -p ESXi_PROFILE_NAME -d /full_path/ESXi-update-package.zip # updates Esxi server
 
 ### Some updates can break Flings:
 	If upgrading from 800 & 80U1, you wll also need to upgrade the Fling.
