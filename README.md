@@ -1,8 +1,10 @@
+
+
 # ☁️ Custom VMware ESXi ISO build scripts
-## Inject consumer NIC, NVME & USB NIC drivers into ESXi ISO images.
+## Inject consumer Intel & Realtek NIC & USB NIC drivers into ESXi installer ISO.
 
 ### [esxi8.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi8.ps1) 
-- Builds an ESXi 8.x iso with latest USB NIC Fling drivers.
+- Builds ESXi 8.x install iso with USB NIC & __REALTEK NIC__ Fling drivers.
 
 ### [esxi7.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi7.ps1)
 - Builds an ESXi 7.x iso with latest NVME, NIC & USB NIC Fling drivers + latest GhettoVCB backup.
@@ -12,24 +14,18 @@
 
 ---
 
-### 🛠️ Using Scripts Without A Broadcom Subscription (After Free Offline Updates Discontinued)
-
-If you have a Broadcom access token, skip to step 5.
-
-1. Find an alternate source for your ESXi offline depot zip file
-2. Set the zip file download URL in the script:
-   `manualUpdateUrl1="your_custom_url.zip"`
-3. Set the expected zip filename:
+## 🛠️ Instructions:
+1. Download your preferred ESXi offline depot zip file (from Broadcom) and save in same directory as the script (or place source somewhere privately accessible via URL) 
+2. Update your downloaded depot zip filename in the script:
    `manualUpdate1="your-esxi-offline-bundle.zip"`
-4. Run the script and choose **Option 1** (run the script from the same directory as your source zip file)
-5. Save your your Broadcom acess between quotes in `$TOKEN = ""` and run the script with **Option 2**
+3. Update the (optional) private source download URL in the script:
+   `manualUpdateUrl1="your_custom_url.zip"`
 
-> ⚠️ **Important:** Always verify the SHA256 checksum when using non-VMware sources. Official release checksums can be found [here](https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere/8-0/release-notes/esxi-update-and-patch-release-notes.html).
+> ⚠️ **Important:** Always verify the SHA256 checksum when downloading VMware sources. Official release checksums can be found [here](https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere/8-0/release-notes/esxi-update-and-patch-release-notes.html).
 
+### 🛠️ PowerCLI Environment Setup:
 
-### 🛠️ PowerCLI Environment Setup Instructions:
-
-- The below is tested on Powershell 5.1 (the default for Windows 10 & 11). For those who have manually upgraded to a later Powershell version, you may need to use the latest PowerCLI version from here: https://developer.broadcom.com/tools/vmware-powercli/latest. Don't install a bleeding edge Python version - tested with Python 3.12.9) 
+- The below is tested on Powershell 5.1 (the default for Windows 10 & 11). For those who have manually upgraded to a later Powershell version, you may need to use the latest PowerCLI version from here: https://developer.broadcom.com/tools/vmware-powercli/latest. Don't install a bleeding edge Python version to be safe. Scripts were tested with Python 3.12.9) 
 
 ```
 First enable Powershell scripts to run:
