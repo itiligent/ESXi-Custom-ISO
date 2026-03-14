@@ -8,7 +8,7 @@
 $baseESXiVer = "8"
 
 # Download other VMWare Flings from Broadcom here: 
-# https://support.broadcom.com/group/ecx/productdownloads?subfamily=Flings&freeDownloads=true
+# https://support.broadcom.com/group/ecx/productdownloads?subfamily=Flings&freeDownloads=true1
 
 # Define Fling file names & download links (Adapt these with the versions you wish to use)
 $flingUrl = "https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/8-updates/" # Flings archived here in case they disappear again
@@ -22,14 +22,13 @@ $manualUpdateUrl1 = "https://itiligent-my.sharepoint.com/personal/david_itiligen
 
 Write-Host ""
 Write-Host "Preparing local ESXi depot and package files..."
-Write-Host "g= genernal update (bug + security) | s = security update (critical security fixes only)"
 Write-Host ""
 
 echo ""
 echo "Downloading $($manualUpdate1) & creating ESXi depot"
 if (!(Test-Path $manualUpdate1)){Invoke-WebRequest -Uri $manualUpdateUrl1 -OutFile $($manualUpdate1)}
 Add-EsxSoftwareDepot $manualUpdate1
-Start-Sleep 2
+Start-Sleep 5
 $imageProfiles = Get-EsxImageProfile | Where-Object { $_.Name -like "ESXi-$baseESXiVer*-standard*" } | Sort-Object -Property CreationTime -Descending
 
 # Print a list of available profiles to choose from
