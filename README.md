@@ -3,13 +3,13 @@
 # ☁️ Custom VMware ESXi ISO build scripts
 ## Inject consumer Intel & Realtek NIC & USB NIC drivers into ESXi installer ISO.
 
-### [esxi8.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi8.ps1) 
+### [esxi8.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi8.ps1) (Zimaboard 1 & 2 compatible)
 - Builds ESXi 8.x install iso with USB NIC & __REALTEK NIC__ Fling drivers.
 
-### [esxi7.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi7.ps1)
+### [esxi7.ps1](https://github.com/itiligent/ESXi-Custom-ISO/blob/main/esxi7.ps1) (Zimaboard 2 compatible)
 - Builds an ESXi 7.x iso with latest NVME, NIC & USB NIC Fling drivers + latest GhettoVCB backup.
 
-### [esxi6.7.ps1](https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/esxi6.7.ps1) (Zimaboard compatible)
+### [esxi6.7.ps1](https://raw.githubusercontent.com/itiligent/ESXi-Custom-ISO/main/esxi6.7.ps1) (Zimaboard 1 compatible)
 - Builds an ESXi 6.7 iso with latest NVME & USB NIC drivers, Zimaboard Realtek 1GbE NIC driver + latest GhettoVCB backup.
 
 ---
