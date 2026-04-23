@@ -17,15 +17,14 @@
 	7. esxcli software profile update -p ESXi_PROFILE_NAME -d /full_path/ESXi-update-package.zip # updates Esxi server
 	8. esxcli system maintenanceMode set -e false
 
-### Some updates can break Flings:
-	If upgrading from 800 & 80U1, you wll also need to upgrade the Fling.
+### Remove incompatible Fling before upgrading ESXi, then upgrade Fling post ESXi upgrade:
 	1. esxcli software vib remove -n vmkusb-nic-fling | reboot
-	2. upgrade Esxi as per above | reboot
+	2. upgrade Esxi | reboot
 	3. Download the appropriate Fling and SCP copy this to Esxi's /tmp dir 
 	4. SSH to Esxi | cd /tmp | unzip /tmp/flingname.zip
 	5. esxcli software vib install -v /tmp/vib20/vmkusb-nic-fling/filename.vib  (use full path) | reboot
  
-### Manually install ghettoVCB:
+### Manually install ghettoVCB ESXi 7.x and lower:
 
     Download offline bundle from https://github.com/lamw/ghettoVCB/releases and copy to /tmp on ESXi
     
@@ -66,12 +65,11 @@ esxcli system module parameters set -p "$(esxcli network nic list |grep vusb |aw
 
 ### To add a USB backup datastore to ESXi:
 
-    1. Stop the USB arbitrator from passing through USB devices temporarily:
-			/etc/init.d/usbarbitrator stop
 
-    2. Plug in the new USB storage
 
-    3. Get the new USB device ID from the hardware passthrough list:
+    1. Plug in the new USB storage
+
+    2. Get the new USB device ID from the hardware passthrough list:
 	
     		esxcli hardware usb passthrough device list
 	   
@@ -80,18 +78,25 @@ esxcli system module parameters set -p "$(esxcli network nic list |grep vusb |aw
        		2    2    bc2       231a       true     yes 				       Seagate RSS LLC Expansion Portable
 		 											(yes = passthrough enabled,
 			  										   we want this disabled)
-	   		
+  
+	3. Stop the USB arbitrator from passing through USB devices temporarily:
+			/etc/init.d/usbarbitrator stop
+			
     4. Prevent USB passthrough for this specific USB device using the above list output, formatted as  #:#:#:#
 	
        esxcli hardware usb passthrough device disable -d 2:2:bc2:231a
 
-    5. Refresh storage devices list in the ESXi console and note the new USB device name. e.g: mpx.vmhba32:C0:T0:L0 for the next step
+	5. Start the USB arbitrator:
+			/etc/init.d/usbarbitrator start
+
+    5. Refresh storage devices list in the ESXi console and note the new USB device name for the optional next step. e.g: mpx.vmhba32:C0:T0:L0 
 	
-	6. update the below DEV and DATASTORE variables and run each line in the terminal:
+	6. If a VMFS partition not already present on the USB, update the below DEV and DATASTORE variables by running each updated line in the terminal:
 
  	DEV="/dev/disks/mpx.vmhba32:C0:T0:L0"
 	DATASTORE_NAME="Backup"
- 
+
+ 	7. To create the VMFS partition on the USB  
 	partedUtil mklabel $DEV gpt # set the gpt label
 	END_SECTOR=$(eval expr $(partedUtil getptbl "$DEV" | tail -1 | awk '{print $1 " \\* " $2 " \\* " $3}') - 1) # get disk geometry
 	partedUtil setptbl $DEV gpt "1 2048 $END_SECTOR AA31E02A400F11DB9590000C2911D1B8 0" # create partition
