@@ -17,8 +17,8 @@ $realtekNicFling = "VMware-Re-Driver_1.101.01-5vmw.800.1.0.20613240.zip"
 
 # Define the esxi depot zip file name & download link (Adapt these with the versions you wish to use)
 # (Download frpm links, or run this script from the same direcrtory as the local source files)
-$manualUpdate1 = "VMware-ESXi-8.0U3i-25205845-depot.zip"
-$manualUpdateUrl1 = "https://itiligent-my.sharepoint.com/personal/david_itiligent_com_au/_layouts/15/guestaccess.aspx?share=IQCF4Hyn6mTeQa_4ZDCjKEHTAQnKFHxTOAsUDSFDn6m7W00&e=Sm7Cyf&download=1"
+$manualUpdate1 = "VMware-ESXi-8.0U3k-25595708-depot.zip"
+$manualUpdateUrl1 = "https://itiligent-my.sharepoint.com/personal/david_itiligent_com_au/_layouts/15/guestaccess.aspx?share=IQDvPGSgpv-pT7zU8u6iJ02cAf-gWuLzP9UjVY1WdZ_G3qY&e=8Bn9wQ&download=1"
 
 Write-Host ""
 Write-Host "Preparing local ESXi depot and package files..."
