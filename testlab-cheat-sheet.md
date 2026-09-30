@@ -110,59 +110,191 @@ First, zero out drive free space:
 ```
 #!/bin/bash
 
-# Define the filesystem mount point and zeroed file location here
-MOUNT_POINT="/"
-ZERO_FILE_LOCATION="${HOME}/zerofile" # Assumes home is on "/" mount point
+# Zero free space on the filesystem containing ZERO_FILE_LOCATION.
+# Compatible with Debian, Fedora, and other GNU/Linux distributions.
 
-# Function to calculate the available free space in bytes for the specified mount point
+set -u
+
+clear
+
+# Temporary zero-filled file
+ZERO_FILE_LOCATION="${HOME}/zerofile"
+
+# Amount of free space to leave available
+SAFETY_MARGIN=$((1 * 1024 * 1024 * 1024))   # 1 GiB
+
+# Progress update interval
+PROGRESS_INTERVAL=1
+
+
+# Directory containing the zero file
+ZERO_FILE_DIR=$(dirname "$ZERO_FILE_LOCATION")
+
+# Determine the actual filesystem mount point containing the zero file
+MOUNT_POINT=$(df -P "$ZERO_FILE_DIR" | tail -1 | awk '{print $6}')
+
+
+# Return available filesystem space in bytes
 get_free_space() {
-    local mount_point=$1
-    # Use 'df' to get the free space available on the specified filesystem
-    free_space=$(df "$mount_point" | tail -1 | awk '{print $4}')
-    echo $((free_space * 1024))  # Convert from KB to bytes
+    df -B1 --output=avail "$1" 2>/dev/null | tail -1 | tr -d ' '
 }
 
-# Function to calculate the maximum file size to create
-calculate_max_file_size() {
-    local free_space=$1
-    # Define a safety margin (e.g., 1 GB) to prevent running out of space
-    local safety_margin=$((1 * 1024 * 1024 * 1024))  # 1 GB in bytes
-    # Calculate the maximum file size by subtracting the safety margin
-    local max_file_size=$((free_space - safety_margin))
-    # Ensure that the maximum file size is not negative
-    if [ $max_file_size -lt 0 ]; then
-        max_file_size=0
+
+# Convert bytes to human-readable units
+human_size() {
+    local bytes="$1"
+
+    if command -v numfmt >/dev/null 2>&1; then
+        numfmt --to=iec-i --suffix=B "$bytes"
+    else
+        awk -v b="$bytes" 'BEGIN {
+            if (b >= 1073741824)
+                printf "%.2f GiB", b / 1073741824;
+            else if (b >= 1048576)
+                printf "%.2f MiB", b / 1048576;
+            else
+                printf "%.2f KiB", b / 1024;
+        }'
     fi
-    echo $max_file_size
 }
 
-# Get the available free space for the specified mount point
-free_space=$(get_free_space "$MOUNT_POINT")
 
-# Calculate the maximum file size
-max_file_size=$(calculate_max_file_size $free_space)
+# Remove zero file if interrupted
+cleanup() {
+    if [ -f "$ZERO_FILE_LOCATION" ]; then
+        echo
+        echo "Removing temporary zero file..."
+        rm -f "$ZERO_FILE_LOCATION"
+        sync
+    fi
+}
 
-# Convert max file size to a more readable format
-if [ $max_file_size -gt 0 ]; then
-    max_file_size_mb=$((max_file_size / 1024 / 1024))
-    echo "Maximum file size for zeroing out: ${max_file_size_mb} MB"
+trap cleanup INT TERM
 
-    # Create a large file filled with zeros to ensure all free space is filled
-    echo "Creating zeroed file of size ${max_file_size_mb} MB at ${ZERO_FILE_LOCATION}..."
-    dd if=/dev/zero of="${ZERO_FILE_LOCATION}" bs=1M status=progress seek=$max_file_size_mb
 
-    # Remove the zeroed file to make the space available for shrinking
-    echo "Removing the zeroed file..."
-    rm -f "${ZERO_FILE_LOCATION}"
-
-    # Sync filesystem to ensure all data is written to disk
-    echo "Syncing filesystem..."
-    sync
-
-    echo "Zeroing and sync complete. Now you can proceed to compact the VM disk from VMware tools."
-else
-    echo "Not enough free space to create the zeroed file. Please free up some space before proceeding."
+# Make sure destination directory exists
+if [ ! -d "$ZERO_FILE_DIR" ]; then
+    echo "ERROR: Directory does not exist:"
+    echo "       $ZERO_FILE_DIR"
+    exit 1
 fi
+
+
+# Determine available space on the filesystem containing ZERO_FILE_LOCATION
+free_space=$(get_free_space "$ZERO_FILE_DIR")
+
+if ! [[ "$free_space" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: Unable to determine available space."
+    exit 1
+fi
+
+
+# Ensure enough space remains for safety margin
+if [ "$free_space" -le "$SAFETY_MARGIN" ]; then
+    echo "ERROR: Not enough free space."
+    echo "Available:      $(human_size "$free_space")"
+    echo "Safety margin:  $(human_size "$SAFETY_MARGIN")"
+    exit 1
+fi
+
+
+# Calculate size to write
+max_file_size=$((free_space - SAFETY_MARGIN))
+
+# dd uses 1 MiB blocks
+max_file_size_mb=$((max_file_size / 1024 / 1024))
+target_bytes=$((max_file_size_mb * 1024 * 1024))
+
+
+echo
+echo "Zero file location:  $ZERO_FILE_LOCATION"
+echo "Filesystem:          $MOUNT_POINT"
+echo "Available space:     $(human_size "$free_space")"
+echo "Safety margin:       $(human_size "$SAFETY_MARGIN")"
+echo "Zero file target:    $(human_size "$target_bytes")"
+echo
+
+echo "Creating zero-filled file..."
+echo
+
+
+# Write zeros in the background
+dd if=/dev/zero \
+   of="$ZERO_FILE_LOCATION" \
+   bs=1M \
+   count="$max_file_size_mb" \
+   status=none &
+
+dd_pid=$!
+
+
+# Display progress
+while kill -0 "$dd_pid" 2>/dev/null; do
+
+    if [ -f "$ZERO_FILE_LOCATION" ]; then
+        current_size=$(stat -c '%s' "$ZERO_FILE_LOCATION" 2>/dev/null || echo 0)
+    else
+        current_size=0
+    fi
+
+    if ! [[ "$current_size" =~ ^[0-9]+$ ]]; then
+        current_size=0
+    fi
+
+    if [ "$target_bytes" -gt 0 ]; then
+        percent=$((current_size * 100 / target_bytes))
+    else
+        percent=0
+    fi
+
+    if [ "$percent" -gt 100 ]; then
+        percent=100
+    fi
+
+    printf "\rProgress: %3d%%  Written: %-10s / %-10s" \
+        "$percent" \
+        "$(human_size "$current_size")" \
+        "$(human_size "$target_bytes")"
+
+    sleep "$PROGRESS_INTERVAL"
+done
+
+
+wait "$dd_pid"
+dd_status=$?
+
+
+if [ "$dd_status" -ne 0 ]; then
+    echo
+    echo
+    echo "ERROR: dd failed with exit code $dd_status."
+    cleanup
+    exit "$dd_status"
+fi
+
+
+printf "\rProgress: 100%%  Written: %-10s / %-10s\n" \
+    "$(human_size "$target_bytes")" \
+    "$(human_size "$target_bytes")"
+
+
+echo
+echo "Syncing filesystem..."
+sync
+
+echo "Removing zero file..."
+rm -f "$ZERO_FILE_LOCATION"
+
+echo "Syncing filesystem..."
+sync
+
+echo "Clearing history cache ready for reimage..."
+history -c && history -w
+
+echo
+echo "Zeroing complete."
+echo "The VM disk can now be compacted."
+echo
 
 ```
 
